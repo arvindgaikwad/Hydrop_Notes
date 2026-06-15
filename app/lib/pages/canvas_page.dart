@@ -550,6 +550,8 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
 
                                 if (format == 'png') {
                                   await ExportController.exportToImage(context, _canvasController.layersNotifier.value, cropRect: rect, fileName: _canvasController.pendingExportNameNotifier.value);
+                                } else if (format == 'svg') {
+                                  await ExportController.exportToSvg(context, _canvasController.layersNotifier.value, cropRect: rect, fileName: _canvasController.pendingExportNameNotifier.value);
                                 } else {
                                   await ExportController.exportToPdf(_canvasController.layersNotifier.value, canvasType: widget.note.canvasType, cropRect: rect, fileName: _canvasController.pendingExportNameNotifier.value);
                                 }
@@ -625,6 +627,13 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                         onSelected: (val) => setStateDialog(() => selectedFormat = 'pdf'),
                         selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
                       ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text('SVG Vector'),
+                        selected: selectedFormat == 'svg',
+                        onSelected: (val) => setStateDialog(() => selectedFormat = 'svg'),
+                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -679,6 +688,8 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                       );
                       if (selectedFormat == 'png') {
                         await ExportController.exportToImage(context, _canvasController.layersNotifier.value, fileName: fileName);
+                      } else if (selectedFormat == 'svg') {
+                        await ExportController.exportToSvg(context, _canvasController.layersNotifier.value, fileName: fileName);
                       } else {
                         await ExportController.exportToPdf(_canvasController.layersNotifier.value, canvasType: widget.note.canvasType, fileName: fileName);
                       }

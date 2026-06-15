@@ -21,7 +21,7 @@
 ## 🪲 BUGS & ISSUES (INVESTIGATING)
 *Log active bugs here. A bug must be resolved or stashed/rolled back before starting a new feature.*
 
-- [x] **💻 AXSpam (Desktop):** `ui::AXTree` console error spam in Windows debug output (Known Flutter engine bug related to TextFields).
+- [ ] **💻 AXSpam (Desktop):** `ui::AXTree` console error spam in Windows debug output (Known Flutter engine bug related to TextFields).
 - [ ] **📱 Mobile Interaction Deficit:** (Deferred) Drawing or interacting on touch-sensitive screens has alignment issues.
 
 ---
