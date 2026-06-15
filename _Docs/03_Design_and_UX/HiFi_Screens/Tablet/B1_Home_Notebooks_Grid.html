@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>B1 — Home: Notebooks Grid (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --radius-pill: 32px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    height: 100%;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 40px;
+  }
+  .brand-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 4px;
+  }
+  .nav-item:hover { background: var(--bg-tertiary); }
+  .nav-item.active {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--accent-active);
+  }
+  .sidebar-spacer { flex: 1; }
+  .new-notebook-btn {
+    height: 48px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  /* Main Content */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+  }
+  .header {
+    height: 96px;
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .search-bar {
+    width: 320px;
+    height: 48px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-btn);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text-primary);
+    outline: none;
+  }
+  .user-avatar {
+    width: 40px; height: 40px;
+    border-radius: 20px;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* Content Area */
+  .content {
+    flex: 1;
+    padding: 32px 48px;
+    overflow-y: auto;
+  }
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .pill {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pill.active {
+    background: var(--accent);
+    color: #FFFFFF;
+    border-color: var(--accent);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  
+  /* Notebook Card */
+  .notebook-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .notebook-card:hover {
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    transform: translateY(-4px);
+  }
+  .card-cover {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cover-1 { background: #F0F4FF; }
+  .cover-2 { background: #F0FDF4; }
+  .cover-3 { background: #FFF7ED; }
+  .cover-4 { background: #FDF2F8; }
+  .cover-5 { background: #F5F3FF; }
+  .cover-6 { background: #ECFEFF; }
+  .cover-icon {
+    width: 48px;
+    height: 48px;
+    opacity: 0.35;
+  }
+  .card-info {
+    padding: 16px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pro-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
+    background: var(--pro-gradient);
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+        <path d="M8 8 L32 8 L32 32 L8 32 Z" stroke="#FFFFFF" stroke-width="3" fill="none"/>
+        <path d="M14 14 L26 14" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h2>Horizon</h2>
+  </div>
+  
+  <div class="nav-item active">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+    All Notes
+  </div>
+  <div class="nav-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Recent
+  </div>
+  <div class="nav-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    Favorites
+  </div>
+  <div class="nav-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Shared
+  </div>
+  
+  <div class="sidebar-spacer"></div>
+  
+  <button class="new-notebook-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Notebook
+  </button>
+</div>
+
+<div class="main">
+  <div class="header">
+    <h1>My Notebooks</h1>
+    <div class="header-right">
+      <div class="search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search notebooks...">
+      </div>
+      <div class="user-avatar">JD</div>
+    </div>
+  </div>
+  
+  <div class="content">
+    <div class="filters">
+      <button class="pill active">All</button>
+      <button class="pill">Work</button>
+      <button class="pill">Personal</button>
+      <button class="pill">University</button>
+    </div>
+    
+    <div class="grid">
+      <div class="notebook-card">
+        <div class="card-cover cover-1">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Physics 101</div>
+          <div class="card-meta">8 pages · 5h ago</div>
+        </div>
+      </div>
+      <div class="notebook-card">
+        <div class="card-cover cover-2">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Biology 301</div>
+          <div class="card-meta">12 pages · 2h ago <span class="pro-badge">PRO</span></div>
+        </div>
+      </div>
+      <div class="notebook-card">
+        <div class="card-cover cover-3">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Creative Writing</div>
+          <div class="card-meta">24 pages · Yesterday</div>
+        </div>
+      </div>
+      <div class="notebook-card">
+        <div class="card-cover cover-4">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Personal Journal</div>
+          <div class="card-meta">156 pages · 1w ago</div>
+        </div>
+      </div>
+      <div class="notebook-card">
+        <div class="card-cover cover-5">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Project Alpha</div>
+          <div class="card-meta">42 pages · 3d ago</div>
+        </div>
+      </div>
+      <div class="notebook-card">
+        <div class="card-cover cover-6">
+          <svg class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Meeting Notes</div>
+          <div class="card-meta">6 pages · Just now</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

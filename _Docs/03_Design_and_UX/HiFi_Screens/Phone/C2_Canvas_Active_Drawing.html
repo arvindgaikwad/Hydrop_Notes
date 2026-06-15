@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>C2 — Canvas Active Drawing (Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+    --accent-glow: rgba(99, 102, 241, 0.10);
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --radius-pill: 32px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Canvas Header */
+  .canvas-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 96px;
+    padding: 48px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    background: linear-gradient(180deg, var(--bg-primary) 60%, transparent);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none; color: var(--text-primary); cursor: pointer;
+  }
+  .page-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .header-right {
+    display: flex;
+    gap: 4px;
+  }
+  .header-action {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none;
+    color: var(--text-muted); cursor: pointer;
+    border-radius: 8px;
+  }
+  .header-action:hover { background: var(--bg-tertiary); }
+
+  /* Dot Grid Canvas */
+  .canvas {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+    background-position: 12px 12px;
+  }
+
+  /* Ink Strokes (simulated with SVG) */
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 2;
+  }
+  .ink-layer svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Floating Tool Palette — Phone: horizontal bottom pill */
+  .tool-palette {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  }
+  .tool-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    position: relative;
+    transition: all 0.15s ease;
+  }
+  .tool-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  .tool-btn.active {
+    background: var(--accent-glow);
+    color: var(--accent-active);
+  }
+  .tool-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-active);
+  }
+  .tool-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    border: 2px solid var(--bg-secondary);
+    box-shadow: 0 0 0 1px var(--border);
+    cursor: pointer;
+  }
+
+  /* Zoom Indicator */
+  .zoom-indicator {
+    position: absolute;
+    bottom: 100px;
+    right: 20px;
+    z-index: 15;
+    height: 28px;
+    padding: 0 10px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas"></div>
+
+<div class="ink-layer">
+  <svg viewBox="0 0 390 844" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Heading: "Cell Division" -->
+    <text x="40" y="160" font-family="DM Sans" font-size="22" font-weight="600" fill="#0F172A">Cell Division</text>
+    
+    <!-- Horizontal line under heading -->
+    <path d="M40 172 L200 172" stroke="#6366F1" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    
+    <!-- Body text lines -->
+    <text x="40" y="210" font-family="DM Sans" font-size="14" fill="#334155">• Mitosis produces two identical cells</text>
+    <text x="40" y="236" font-family="DM Sans" font-size="14" fill="#334155">• Four phases: Prophase, Metaphase,</text>
+    <text x="48" y="258" font-family="DM Sans" font-size="14" fill="#334155">Anaphase, Telophase</text>
+    <text x="40" y="294" font-family="DM Sans" font-size="14" fill="#334155">• Cytokinesis divides cytoplasm</text>
+    
+    <!-- Simple cell diagram -->
+    <ellipse cx="195" cy="420" rx="80" ry="70" stroke="#0F172A" stroke-width="2" fill="none"/>
+    <ellipse cx="195" cy="420" rx="25" ry="22" stroke="#6366F1" stroke-width="1.5" fill="rgba(99,102,241,0.06)"/>
+    <text x="185" y="425" font-family="DM Sans" font-size="10" fill="#6366F1">nucleus</text>
+    
+    <!-- Chromosome lines inside -->
+    <path d="M175 400 Q180 410 185 400" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+    <path d="M200 405 Q205 415 210 405" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+    
+    <!-- Arrow and label -->
+    <path d="M290 420 L330 420" stroke="#64748B" stroke-width="1" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <text x="295" y="410" font-family="DM Sans" font-size="11" fill="#64748B">membrane</text>
+    
+    <!-- More notes below -->
+    <text x="40" y="550" font-family="DM Sans" font-size="14" fill="#334155">• DNA replication occurs in S phase</text>
+    <text x="40" y="576" font-family="DM Sans" font-size="14" fill="#334155">• Checkpoints prevent damaged cells</text>
+    <text x="48" y="598" font-family="DM Sans" font-size="14" fill="#334155">from dividing further</text>
+    
+    <!-- Highlight box -->
+    <rect x="32" y="630" width="326" height="64" rx="8" fill="rgba(99,102,241,0.05)" stroke="rgba(99,102,241,0.15)" stroke-width="1"/>
+    <text x="48" y="655" font-family="DM Sans" font-size="13" font-weight="500" fill="#6366F1">Key Formula:</text>
+    <text x="48" y="678" font-family="DM Sans" font-size="14" fill="#334155">Growth rate = (Nt - N0) / t</text>
+    
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <path d="M0 0 L8 4 L0 8" fill="none" stroke="#64748B" stroke-width="1"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="canvas-header">
+  <div class="header-left">
+    <button class="back-btn">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="page-title">Biology 301 — Page 3</span>
+  </div>
+  <div class="header-right">
+    <button class="header-action">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 10h4l3-7 4 14 3-7h4"/></svg>
+    </button>
+    <button class="header-action">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+    </button>
+    <button class="header-action">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="zoom-indicator">85%</div>
+
+<div class="tool-palette">
+  <button class="tool-btn active" title="Pen">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+  </button>
+  <button class="tool-btn" title="Highlighter">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 01-2.8 0l-5.2-5.2a2 2 0 010-2.8L14 4"/></svg>
+  </button>
+  <button class="tool-btn" title="Eraser">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 20H7L3 16l9-9 8 8-4 4z"/><path d="M18 13l-1.5-1.5"/></svg>
+  </button>
+  <button class="tool-btn" title="Lasso">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="9" r="7"/><path d="M12 16c-1.5 2-3 4-3 6"/></svg>
+  </button>
+  <div class="tool-divider"></div>
+  <div class="color-swatch"></div>
+</div>
+
+</body>
+</html>

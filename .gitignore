@@ -1,0 +1,25 @@
+# Root-level ignores
+graphify-out/
+.agents/
+.idea/
+*.iml
+
+# Flutter/Dart/Pub related (from app/.gitignore)
+app/.dart_tool/
+app/.flutter-plugins-dependencies
+app/.pub-cache/
+app/.pub/
+app/build/
+app/coverage/
+app/android/app/debug
+app/android/app/profile
+app/android/app/release
+app/ios/Flutter/.last_build_id
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.history

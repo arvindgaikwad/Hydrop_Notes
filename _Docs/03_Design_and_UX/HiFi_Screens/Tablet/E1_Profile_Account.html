@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>E1 — Profile / Account (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+    --gold: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+  }
+  
+  /* Sidebar Navigation */
+  .sidebar {
+    width: 320px;
+    height: 100%;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    height: 120px;
+    padding: 48px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .back-btn {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .header-title {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .sidebar-menu {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .nav-item.active {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  .nav-icon {
+    margin-right: 16px;
+  }
+  
+  .pro-nav-item {
+    background: linear-gradient(to right, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.1));
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .pro-nav-item .nav-icon { color: var(--gold); }
+  
+  /* Main Content Area */
+  .main-content {
+    flex: 1;
+    padding: 64px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .settings-container {
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  /* Profile Card */
+  .profile-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .avatar {
+    width: 120px; height: 120px;
+    border-radius: 60px;
+    background: var(--accent-active);
+    color: white;
+    font-size: 40px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+  }
+  .profile-name {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .profile-email {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  
+  .setting-group {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-item:last-child { border-bottom: none; }
+  .setting-label {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .setting-value {
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+  .btn-outline {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .btn-danger {
+    color: #EF4444;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <button class="back-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="header-title">Settings</div>
+  </div>
+  <div class="sidebar-menu">
+    <div class="nav-item pro-nav-item">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Horizon Pro
+    </div>
+    
+    <div class="nav-item active">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Account
+    </div>
+    
+    <div class="nav-item">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+      Cloud Storage
+    </div>
+    
+    <div class="nav-item">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      App Settings
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="settings-container">
+    <div class="profile-card">
+      <div class="avatar">SJ</div>
+      <div class="profile-name">Sarah Jenkins</div>
+      <div class="profile-email">sarah.j@example.com</div>
+      <div class="plan-badge">Free Plan</div>
+    </div>
+    
+    <div class="section-title">Personal Information</div>
+    <div class="setting-group">
+      <div class="setting-item">
+        <div class="setting-label">Name</div>
+        <div class="setting-value">Sarah Jenkins</div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">Email</div>
+        <div class="setting-value">sarah.j@example.com</div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">Password</div>
+        <button class="btn-outline">Change</button>
+      </div>
+    </div>
+    
+    <div class="section-title">Danger Zone</div>
+    <div class="setting-group">
+      <div class="setting-item">
+        <div class="setting-label" style="color:#EF4444;">Sign Out</div>
+        <button class="btn-outline btn-danger">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

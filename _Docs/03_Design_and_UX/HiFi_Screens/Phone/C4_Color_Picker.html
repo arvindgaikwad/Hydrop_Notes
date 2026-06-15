@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>C4 — Color Picker Open (Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Canvas Background */
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+    z-index: 0;
+  }
+  
+  /* Ink Content (faded) */
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  .header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 104px;
+    padding: 54px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(252,252,252,0.95) 0%, rgba(252,252,252,0) 100%);
+    z-index: 10;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+  }
+  .page-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Backdrop Dim */
+  .backdrop-dim {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 15;
+  }
+
+  /* Bottom Sheet (Color Picker) */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: #FFFFFF;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 16px 24px 48px;
+    z-index: 20;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.1);
+  }
+  .drag-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+  
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  
+  /* Colors Grid */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px 12px;
+    margin-bottom: 32px;
+    justify-items: center;
+  }
+  .color-swatch {
+    width: 40px; height: 40px;
+    border-radius: 20px;
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .color-swatch.active::after {
+    content: '';
+    width: 48px; height: 48px;
+    border: 2px solid var(--accent-active);
+    border-radius: 24px;
+    position: absolute;
+  }
+  
+  /* Recent Row */
+  .recent-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  /* Custom Hex Input */
+  .hex-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .custom-swatch {
+    width: 40px; height: 40px;
+    border-radius: 20px;
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  }
+  .hex-input {
+    flex: 1;
+    height: 48px;
+    background: #F1F5F9;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .hex-input span { color: var(--text-muted); font-family: monospace; font-size: 16px; }
+  .hex-input input {
+    border: none;
+    background: transparent;
+    font-family: monospace;
+    font-size: 16px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    outline: none;
+  }
+  
+  /* Toolbar behind sheet (partially hidden) */
+  .toolbar {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 56px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 28px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 10;
+  }
+  .tool-btn {
+    width: 44px; height: 44px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  
+</style>
+</head>
+<body>
+
+<div class="canvas-bg"></div>
+<div class="ink-layer">
+  <svg width="390" height="844">
+    <path d="M 50 200 Q 150 150 250 220 T 350 180" fill="none" stroke="#0F172A" stroke-width="2"/>
+  </svg>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="back-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="page-title">Page 1</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="tool-btn active">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+  </button>
+  <button class="tool-btn">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+  </button>
+  <button class="tool-btn">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4C13.5 3.5 14.5 3.5 15 4L20 9C20.5 9.5 20.5 10.5 20 11L11 20"/><path d="M16 16L12 12"/></svg>
+  </button>
+  <button class="tool-btn">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13a4.5 4.5 0 1 1 5-8.5"/><path d="M14 6h.01"/><path d="M18 10h.01"/><path d="M16 14h.01"/><path d="M12 17h.01"/><path d="M8 17h.01"/><path d="M5 14h.01"/><path d="M5 10h.01"/></svg>
+  </button>
+  <div style="width: 1px; height: 24px; background: var(--border); margin: 0 4px;"></div>
+  <button class="tool-btn" style="color: var(--accent-active);">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+</div>
+
+<div class="backdrop-dim"></div>
+
+<div class="bottom-sheet">
+  <div class="drag-handle"></div>
+  
+  <div class="section-title">Presets</div>
+  <div class="color-grid">
+    <div class="color-swatch" style="background: #0F172A;"></div>
+    <div class="color-swatch" style="background: #475569;"></div>
+    <div class="color-swatch" style="background: #94A3B8;"></div>
+    <div class="color-swatch" style="background: #E2E8F0;"></div>
+    
+    <div class="color-swatch active" style="background: #EF4444;"></div>
+    <div class="color-swatch" style="background: #F97316;"></div>
+    <div class="color-swatch" style="background: #F59E0B;"></div>
+    <div class="color-swatch" style="background: #10B981;"></div>
+    
+    <div class="color-swatch" style="background: #06B6D4;"></div>
+    <div class="color-swatch" style="background: #3B82F6;"></div>
+    <div class="color-swatch" style="background: #6366F1;"></div>
+    <div class="color-swatch" style="background: #8B5CF6;"></div>
+  </div>
+  
+  <div class="section-title">Recent</div>
+  <div class="recent-row">
+    <div class="color-swatch" style="background: #EF4444;"></div>
+    <div class="color-swatch" style="background: #0F172A;"></div>
+    <div class="color-swatch" style="background: #10B981;"></div>
+    <div class="color-swatch" style="background: #F59E0B;"></div>
+  </div>
+  
+  <div class="section-title">Custom</div>
+  <div class="hex-input-wrapper">
+    <div class="custom-swatch"></div>
+    <div class="hex-input">
+      <span>#</span>
+      <input type="text" value="EF4444">
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

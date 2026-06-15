@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>A1 — Welcome / Splash (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+    --accent-glow: rgba(99, 102, 241, 0.10);
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --radius-pill: 32px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    min-height: 834px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .screen {
+    width: 100%;
+    height: 834px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+  }
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 64px 48px 64px 80px;
+    position: relative;
+    z-index: 1;
+  }
+  .right-panel {
+    position: relative;
+    overflow: hidden;
+  }
+  .right-panel .dot-pattern {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #CBD5E1 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.4;
+  }
+  .right-panel .canvas-preview {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-3deg);
+    width: 380px;
+    height: 500px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .ink-line {
+    height: 2px;
+    border-radius: 1px;
+    background: var(--text-primary);
+    opacity: 0.7;
+  }
+  .ink-line:nth-child(1) { width: 60%; }
+  .ink-line:nth-child(2) { width: 80%; opacity: 0.5; }
+  .ink-line:nth-child(3) { width: 45%; opacity: 0.3; }
+  .ink-line:nth-child(4) { width: 70%; opacity: 0.5; }
+  .ink-line:nth-child(5) { width: 50%; opacity: 0.2; }
+  .ink-circle {
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--accent-active);
+    border-radius: 50%;
+    opacity: 0.4;
+    margin-top: 16px;
+  }
+  .logo-mark {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 48px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+  }
+  .logo-mark svg {
+    width: 36px;
+    height: 36px;
+  }
+  .app-name {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 56px;
+    margin-bottom: 16px;
+  }
+  .tagline {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    line-height: 32px;
+    max-width: 380px;
+    margin-bottom: 56px;
+  }
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .btn-primary {
+    height: 56px;
+    padding: 0 40px;
+    background: var(--accent);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-btn);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost {
+    height: 56px;
+    padding: 0 24px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+  .btn-ghost:hover { color: var(--text-primary); }
+  .bottom-text {
+    position: absolute;
+    bottom: 32px;
+    left: 80px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 20px;
+  }
+  .bottom-text a {
+    color: var(--accent-active);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="left-panel">
+    <div class="logo-mark">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 8 L32 8 L32 32 L8 32 Z" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+        <path d="M14 14 L26 14" stroke="#6366F1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M14 20 L22 20" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <path d="M14 26 L24 26" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+    </div>
+    
+    <h1 class="app-name">Horizon<br>Notes</h1>
+    <p class="tagline">The canvas without edges. Write, sketch, and think without limits — on every device you own.</p>
+    
+    <div class="btn-row">
+      <button class="btn-primary">Get Started</button>
+      <button class="btn-ghost">Sign In →</button>
+    </div>
+    
+    <p class="bottom-text">
+      By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
+    </p>
+  </div>
+  
+  <div class="right-panel">
+    <div class="dot-pattern"></div>
+    <div class="canvas-preview">
+      <div class="ink-line"></div>
+      <div class="ink-line"></div>
+      <div class="ink-line"></div>
+      <div class="ink-circle"></div>
+      <div class="ink-line"></div>
+      <div class="ink-line"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

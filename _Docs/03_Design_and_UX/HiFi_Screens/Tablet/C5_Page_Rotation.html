@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>C5 — Page Rotation UI (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #E2E8F0; /* Darker backdrop */
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Rotated Canvas */
+  .canvas-wrapper {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 834px;
+    height: 1194px;
+    background: var(--bg-primary);
+    transform: translate(-50%, -50%) rotate(90deg);
+    box-shadow: 0 32px 100px rgba(0,0,0,0.15);
+  }
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+
+  /* Guide Lines */
+  .guide-line-h {
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: var(--accent-active);
+    opacity: 0.4;
+  }
+  .guide-line-v {
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: var(--accent-active);
+    opacity: 0.4;
+  }
+
+  /* Rotation Handle UI */
+  .rotation-ui {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px; height: 400px;
+    pointer-events: none;
+  }
+  .rotation-arc {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 3px dashed rgba(99, 102, 241, 0.4);
+    border-radius: 50%;
+  }
+  .rotation-indicator {
+    position: absolute;
+    top: -32px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-active);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  }
+  .rotation-knob {
+    position: absolute;
+    top: -16px; left: 50%;
+    transform: translateX(-50%);
+    width: 32px; height: 32px;
+    background: white;
+    border: 4px solid var(--accent-active);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  /* Overlay Buttons */
+  .done-btn {
+    position: absolute;
+    bottom: 64px; left: 50%;
+    transform: translateX(-50%);
+    height: 64px;
+    padding: 0 48px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+    cursor: pointer;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrapper">
+  <div class="canvas-bg"></div>
+  <div class="ink-layer">
+    <svg width="834" height="1194">
+      <path d="M 100 300 Q 300 200 400 400 T 700 300" fill="none" stroke="#0F172A" stroke-width="3"/>
+    </svg>
+  </div>
+</div>
+
+<div class="guide-line-h"></div>
+<div class="guide-line-v"></div>
+
+<div class="rotation-ui">
+  <div class="rotation-arc"></div>
+  <div class="rotation-indicator">90°</div>
+  <div class="rotation-knob"></div>
+</div>
+
+<button class="done-btn">Done</button>
+
+</body>
+</html>

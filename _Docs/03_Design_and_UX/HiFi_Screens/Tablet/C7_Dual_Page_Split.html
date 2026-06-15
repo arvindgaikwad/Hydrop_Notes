@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>C7 — Dual-Page Split View (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+  }
+  
+  /* Canvas Background */
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 1px, transparent 1px);
+    background-size: 28px 28px;
+    z-index: 0;
+  }
+  
+  /* Panels */
+  .panel {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+  .panel-right {
+    background: rgba(255, 255, 255, 0.4); /* slightly distinct background to show it's a split */
+  }
+  
+  /* Central Divider */
+  .divider {
+    width: 4px;
+    height: 100%;
+    background: var(--border);
+    cursor: col-resize;
+    position: relative;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .divider:hover, .divider:active { background: var(--accent-active); }
+  .drag-handle {
+    width: 6px;
+    height: 48px;
+    background: var(--text-muted);
+    border-radius: 3px;
+    position: absolute;
+  }
+  .divider:hover .drag-handle { background: white; }
+  
+  /* Header */
+  .header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 80px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(252,252,252,0.95) 0%, rgba(252,252,252,0) 100%);
+    z-index: 10;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .page-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Toolbar */
+  .toolbar-wrapper {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+  }
+  .toolbar {
+    width: 64px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-right .toolbar {
+    /* Dimmed toolbar on inactive side */
+    opacity: 0.5;
+    box-shadow: none;
+  }
+  .tool-btn {
+    width: 48px; height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .panel-left .tool-btn.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-active);
+  }
+  .color-indicator {
+    width: 24px; height: 24px;
+    border-radius: 12px;
+    background: var(--text-primary);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+
+  /* Ink Content */
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- Left Panel (Active) -->
+<div class="panel panel-left">
+  <div class="canvas-bg"></div>
+  <div class="ink-layer">
+    <svg width="595" height="834">
+      <path d="M 150 250 Q 250 200 350 300 T 450 280" fill="none" stroke="#0F172A" stroke-width="2"/>
+      <path d="M 200 350 Q 300 450 400 400" fill="none" stroke="#6366F1" stroke-width="3"/>
+    </svg>
+  </div>
+  
+  <div class="header" style="padding-left: 100px;">
+    <div class="header-left">
+      <div class="page-title">Physics 101 — Page 2</div>
+    </div>
+  </div>
+  
+  <div class="toolbar-wrapper">
+    <div class="toolbar">
+      <button class="tool-btn active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4C13.5 3.5 14.5 3.5 15 4L20 9C20.5 9.5 20.5 10.5 20 11L11 20"/><path d="M16 16L12 12"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 13a4.5 4.5 0 1 1 5-8.5"/><path d="M14 6h.01"/><path d="M18 10h.01"/><path d="M16 14h.01"/><path d="M12 17h.01"/><path d="M8 17h.01"/><path d="M5 14h.01"/><path d="M5 10h.01"/></svg>
+      </button>
+      <div style="height: 1px; width: 32px; background: var(--border); margin: 8px 0;"></div>
+      <button class="tool-btn">
+        <div class="color-indicator"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Divider -->
+<div class="divider">
+  <div class="drag-handle"></div>
+</div>
+
+<!-- Right Panel (Reference) -->
+<div class="panel panel-right">
+  <div class="canvas-bg"></div>
+  <div class="ink-layer">
+    <svg width="595" height="834">
+      <path d="M 100 150 Q 200 100 300 200 T 400 180" fill="none" stroke="#64748B" stroke-width="2"/>
+      <path d="M 150 250 Q 250 350 350 300" fill="none" stroke="#64748B" stroke-width="2"/>
+      <path d="M 100 400 Q 200 350 300 450 T 400 430" fill="none" stroke="#64748B" stroke-width="2"/>
+    </svg>
+  </div>
+  
+  <div class="header" style="padding-left: 100px;">
+    <div class="header-left">
+      <div class="page-title">Biology 301 — Page 5</div>
+    </div>
+  </div>
+  
+  <div class="toolbar-wrapper">
+    <div class="toolbar">
+      <button class="tool-btn active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4C13.5 3.5 14.5 3.5 15 4L20 9C20.5 9.5 20.5 10.5 20 11L11 20"/><path d="M16 16L12 12"/></svg>
+      </button>
+      <button class="tool-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 13a4.5 4.5 0 1 1 5-8.5"/><path d="M14 6h.01"/><path d="M18 10h.01"/><path d="M16 14h.01"/><path d="M12 17h.01"/><path d="M8 17h.01"/><path d="M5 14h.01"/><path d="M5 10h.01"/></svg>
+      </button>
+      <div style="height: 1px; width: 32px; background: var(--border); margin: 8px 0;"></div>
+      <button class="tool-btn">
+        <div class="color-indicator"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

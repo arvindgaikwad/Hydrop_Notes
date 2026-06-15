@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>B2 — Notebook Detail: Pages List (Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+    --radius-card: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 54px;
+    padding: 0 24px 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .header {
+    padding: 16px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: none; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-primary);
+  }
+  .icon-btn:hover { background: var(--bg-tertiary); }
+  .header-title h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .header-title p {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .page-card {
+    aspect-ratio: 3/4;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+  }
+  .page-card.active {
+    border-color: var(--accent-active);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+  }
+  .page-card-content {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px; bottom: 8px;
+    background-image: radial-gradient(circle, #CBD5E1 1px, transparent 1px);
+    background-size: 16px 16px;
+    border-radius: 8px;
+  }
+  .ink-line {
+    position: absolute;
+    height: 1px;
+    background: var(--text-primary);
+    opacity: 0.6;
+    border-radius: 1px;
+  }
+  .page-number {
+    position: absolute;
+    bottom: 8px; right: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .add-page-card {
+    aspect-ratio: 3/4;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: transparent;
+  }
+  .add-page-card:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+</style>
+</head>
+<body>
+<div class="status-bar">
+  <span>9:41</span>
+  <div class="status-icons">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="4" width="3" height="8" rx="1"/><rect x="13" y="0" width="3" height="12" rx="1"/></svg>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <button class="icon-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div style="display:flex;gap:4px">
+      <button class="icon-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="header-title">
+    <h1>Biology 301</h1>
+    <p>12 pages · Created May 15</p>
+  </div>
+</div>
+
+<div class="content">
+  <div class="grid">
+    <div class="page-card">
+      <div class="page-card-content">
+        <div class="ink-line" style="top:20%; left:15%; width:60%; height:2px;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:70%;"></div>
+        <div class="ink-line" style="top:35%; left:15%; width:40%;"></div>
+      </div>
+      <div class="page-number">1</div>
+    </div>
+    
+    <div class="page-card">
+      <div class="page-card-content">
+        <div class="ink-line" style="top:20%; left:15%; width:50%; height:2px;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:65%;"></div>
+        <circle cx="50%" cy="60%" r="20" stroke="currentColor" stroke-width="1" fill="none" opacity="0.3"/>
+      </div>
+      <div class="page-number">2</div>
+    </div>
+    
+    <div class="page-card active">
+      <div class="page-card-content">
+        <div class="ink-line" style="top:20%; left:15%; width:75%; height:2px;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:80%;"></div>
+        <div class="ink-line" style="top:35%; left:15%; width:50%;"></div>
+      </div>
+      <div class="page-number">3</div>
+    </div>
+    
+    <button class="add-page-card">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+</body>
+</html>

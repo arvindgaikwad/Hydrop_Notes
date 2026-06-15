@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>D2 — Export Options (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: rgba(15, 23, 42, 0.4);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Centered Modal */
+  .modal {
+    width: 480px;
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+  }
+  
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .modal-title {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .close-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: flex-end;
+    background: none; border: none; color: var(--text-secondary);
+    cursor: pointer;
+  }
+  
+  /* Options */
+  .option-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .option-card:hover {
+    background: var(--bg-primary);
+  }
+  .option-card.active {
+    border-color: var(--accent-active);
+    background: rgba(99, 102, 241, 0.04);
+  }
+  .option-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .option-card.active .option-icon {
+    background: var(--accent-active);
+    color: white;
+  }
+  .option-info { flex: 1; }
+  .option-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .option-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  
+  .radio-btn {
+    width: 24px; height: 24px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .option-card.active .radio-btn {
+    border-color: var(--accent-active);
+  }
+  .option-card.active .radio-btn::after {
+    content: '';
+    width: 12px; height: 12px;
+    border-radius: 6px;
+    background: var(--accent-active);
+  }
+
+  /* Quality Selector */
+  .quality-section {
+    margin: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .quality-label {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .toggle {
+    display: flex;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .toggle-btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: white;
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    gap: 16px;
+  }
+  .btn-primary {
+    flex: 2;
+    height: 56px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    flex: 1;
+    height: 56px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="modal">
+  <div class="modal-header">
+    <div class="modal-title">Export</div>
+    <button class="close-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  
+  <div class="options">
+    <div class="option-card active">
+      <div class="option-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="option-info">
+        <div class="option-title">PDF Document</div>
+        <div class="option-desc">Best for sharing and printing</div>
+      </div>
+      <div class="radio-btn"></div>
+    </div>
+    
+    <div class="option-card">
+      <div class="option-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <div class="option-info">
+        <div class="option-title">PNG Image</div>
+        <div class="option-desc">High quality raster image</div>
+      </div>
+      <div class="radio-btn"></div>
+    </div>
+    
+    <div class="option-card">
+      <div class="option-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </div>
+      <div class="option-info">
+        <div class="option-title">SVG Vector</div>
+        <div class="option-desc">Scalable vector graphics</div>
+      </div>
+      <div class="radio-btn"></div>
+    </div>
+  </div>
+  
+  <div class="quality-section">
+    <div class="quality-label">Image Quality</div>
+    <div class="toggle">
+      <button class="toggle-btn">Standard</button>
+      <button class="toggle-btn active">High</button>
+    </div>
+  </div>
+  
+  <div class="actions">
+    <button class="btn-primary">Export</button>
+    <button class="btn-secondary">Share</button>
+  </div>
+</div>
+
+</body>
+</html>

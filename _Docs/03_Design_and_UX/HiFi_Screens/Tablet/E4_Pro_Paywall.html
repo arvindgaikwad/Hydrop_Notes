@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>E4 — Pro Upgrade / Paywall (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #0F172A; /* Main background */
+    --bg-card: #1E293B;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --border: #334155;
+    --gold: #F59E0B;
+    --gold-glow: rgba(245, 158, 11, 0.2);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Decorative Background */
+  .bg-glow-left {
+    position: absolute;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .bg-glow-right {
+    position: absolute;
+    bottom: -200px; right: -200px;
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--gold-glow), transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Close button */
+  .close-btn {
+    position: absolute;
+    top: 40px; right: 40px;
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    border: none; color: var(--text-primary);
+    cursor: pointer;
+    z-index: 20;
+    transition: background 0.2s;
+  }
+  .close-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* Main Container */
+  .container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 64px 40px;
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Left Side: Copy & Features */
+  .hero-section {
+    flex: 1;
+  }
+  .pro-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 32px;
+    box-shadow: 0 16px 40px var(--gold-glow);
+    color: #fff;
+  }
+  .hero-title {
+    font-size: 56px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .hero-title span { color: var(--gold); }
+  .hero-desc {
+    font-size: 20px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 48px;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .feature-icon {
+    width: 40px; height: 40px;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-text {
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  /* Right Side: Pricing Panel */
+  .pricing-section {
+    width: 400px;
+    flex-shrink: 0;
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    padding: 40px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .pricing-header {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 32px;
+  }
+  
+  .pricing-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .plan-card {
+    background: var(--bg-dark);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .plan-card.active {
+    border-color: var(--gold);
+    background: rgba(245, 158, 11, 0.05);
+  }
+  .badge {
+    position: absolute;
+    top: -12px; right: 24px;
+    background: var(--gold);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .plan-info { flex: 1; }
+  .plan-name {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .plan-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .plan-price {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .plan-period {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  
+  .radio-btn {
+    width: 24px; height: 24px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .plan-card.active .radio-btn { border-color: var(--gold); }
+  .plan-card.active .radio-btn::after {
+    content: ''; width: 12px; height: 12px; background: var(--gold); border-radius: 6px;
+  }
+  
+  .btn-primary {
+    width: 100%;
+    height: 64px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    color: #000;
+    border: none;
+    border-radius: 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 12px 32px var(--gold-glow);
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .terms {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow-left"></div>
+<div class="bg-glow-right"></div>
+
+<button class="close-btn">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+
+<div class="container">
+  <div class="hero-section">
+    <div class="pro-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div class="hero-title">Unlock<br>Horizon <span>Pro</span></div>
+    <div class="hero-desc">Experience the ultimate digital canvas without limits. Perfect for students, professionals, and creatives.</div>
+    
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="feature-text">Unlimited notebooks</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="feature-text">Sync across devices</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="feature-text">Premium pen styles</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="feature-text">High-res vector export</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="pricing-section">
+    <div class="pricing-header">Choose your plan</div>
+    
+    <div class="pricing-cards">
+      <div class="plan-card">
+        <div class="plan-info">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-price-row">
+            <div class="plan-price">$2.99</div>
+            <div class="plan-period">/ mo</div>
+          </div>
+        </div>
+        <div class="radio-btn"></div>
+      </div>
+      
+      <div class="plan-card active">
+        <div class="badge">Save 40%</div>
+        <div class="plan-info">
+          <div class="plan-name">Yearly</div>
+          <div class="plan-price-row">
+            <div class="plan-price">$19.99</div>
+            <div class="plan-period">/ yr</div>
+          </div>
+        </div>
+        <div class="radio-btn"></div>
+      </div>
+    </div>
+    
+    <button class="btn-primary">Start 7-Day Free Trial</button>
+    <div class="terms">Cancel anytime. Subscription auto-renews.</div>
+  </div>
+</div>
+
+</body>
+</html>

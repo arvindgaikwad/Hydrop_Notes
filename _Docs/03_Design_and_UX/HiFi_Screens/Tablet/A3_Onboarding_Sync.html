@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>A3 — Onboarding: Sync Everywhere (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    text-align: center;
+    z-index: 10;
+  }
+  .illustration-area {
+    width: 400px;
+    height: 400px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .headline {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .subtitle {
+    font-size: 20px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 64px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 48px;
+    position: absolute;
+    bottom: 64px;
+  }
+  .skip-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .dots {
+    display: flex;
+    gap: 12px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .dot.active {
+    background: var(--accent-active);
+  }
+  .next-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="content">
+  <div class="illustration-area">
+    <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
+      <!-- Cloud -->
+      <path d="M100 160 A40 40 0 0 1 140 120 A50 50 0 0 1 230 130 A40 40 0 0 1 220 200 L110 200 A35 35 0 0 1 100 160 Z" fill="#F1F5F9" stroke="#6366F1" stroke-width="3"/>
+      
+      <!-- Dotted lines -->
+      <path d="M160 200 L90 270" stroke="#CBD5E1" stroke-width="3" stroke-dasharray="8 8"/>
+      <path d="M160 200 L160 290" stroke="#CBD5E1" stroke-width="3" stroke-dasharray="8 8"/>
+      <path d="M160 200 L240 270" stroke="#CBD5E1" stroke-width="3" stroke-dasharray="8 8"/>
+      
+      <!-- Devices -->
+      <rect x="50" y="260" width="40" height="60" rx="6" fill="white" stroke="#0F172A" stroke-width="3"/>
+      <rect x="120" y="280" width="80" height="50" rx="6" fill="white" stroke="#0F172A" stroke-width="3"/>
+      <rect x="220" y="260" width="70" height="50" rx="6" fill="white" stroke="#0F172A" stroke-width="3"/>
+    </svg>
+  </div>
+  <h1 class="headline">Your notes, every device</h1>
+  <p class="subtitle">Seamless sync. Start on your tablet, continue on your phone.</p>
+</div>
+
+<div class="controls">
+  <button class="skip-btn">Skip</button>
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+  </div>
+  <button class="next-btn">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+</div>
+
+</body>
+</html>

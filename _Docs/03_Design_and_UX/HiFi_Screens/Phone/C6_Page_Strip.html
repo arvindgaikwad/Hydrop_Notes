@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>C6 — Page Strip Expanded (Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Canvas Background */
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+    z-index: 0;
+  }
+  
+  /* Header */
+  .header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 104px;
+    padding: 54px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(252,252,252,0.95) 0%, rgba(252,252,252,0) 100%);
+    z-index: 10;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+  }
+  .page-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Backdrop Dim */
+  .backdrop-dim {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 15;
+  }
+
+  /* Bottom Sheet */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 540px;
+    background: #FFFFFF;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 16px 0 0;
+    z-index: 20;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  .drag-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .sheet-header {
+    padding: 0 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .sheet-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .sheet-actions {
+    display: flex;
+    gap: 12px;
+    color: var(--accent-active);
+    font-weight: 500;
+    font-size: 15px;
+  }
+  
+  /* Page List */
+  .page-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .page-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+  }
+  .page-item.active {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+  .page-thumbnail {
+    width: 60px; height: 80px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: relative;
+    background-image: radial-gradient(circle, #CBD5E1 0.8px, transparent 0.8px);
+    background-size: 12px 12px;
+  }
+  .page-item.active .page-thumbnail {
+    border-color: var(--accent-active);
+    box-shadow: 0 0 0 1px var(--accent-active);
+  }
+  .ink-line {
+    position: absolute;
+    height: 1px;
+    background: var(--text-primary);
+    opacity: 0.6;
+    border-radius: 1px;
+  }
+  .page-info {
+    flex: 1;
+  }
+  .page-name {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .page-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .reorder-handle {
+    color: var(--text-muted);
+  }
+  
+</style>
+</head>
+<body>
+
+<div class="canvas-bg"></div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="back-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="page-title">Page 3</div>
+  </div>
+</div>
+
+<div class="backdrop-dim"></div>
+
+<div class="bottom-sheet">
+  <div class="drag-handle"></div>
+  
+  <div class="sheet-header">
+    <div class="sheet-title">Pages</div>
+    <div class="sheet-actions">
+      <span>Edit</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+  </div>
+  
+  <div class="page-list">
+    <!-- Page 1 -->
+    <div class="page-item">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:60%;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:70%;"></div>
+      </div>
+      <div class="page-info">
+        <div class="page-name">Page 1</div>
+        <div class="page-meta">May 15</div>
+      </div>
+      <svg class="reorder-handle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    
+    <!-- Page 2 -->
+    <div class="page-item">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:50%;"></div>
+        <circle cx="50%" cy="60%" r="10" stroke="currentColor" stroke-width="1" fill="none" opacity="0.3"/>
+      </div>
+      <div class="page-info">
+        <div class="page-name">Page 2</div>
+        <div class="page-meta">May 16</div>
+      </div>
+      <svg class="reorder-handle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    
+    <!-- Page 3 (Active) -->
+    <div class="page-item active">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:75%;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:80%;"></div>
+      </div>
+      <div class="page-info">
+        <div class="page-name">Page 3</div>
+        <div class="page-meta">Today, 9:41 AM</div>
+      </div>
+      <svg class="reorder-handle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    
+    <!-- Page 4 -->
+    <div class="page-item">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:40%;"></div>
+      </div>
+      <div class="page-info">
+        <div class="page-name">Page 4</div>
+        <div class="page-meta">Today, 10:05 AM</div>
+      </div>
+      <svg class="reorder-handle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

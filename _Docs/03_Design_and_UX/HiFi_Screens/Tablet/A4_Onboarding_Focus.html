@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>A4 — Onboarding: Built for Focus (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    text-align: center;
+    z-index: 10;
+  }
+  .illustration-area {
+    width: 400px;
+    height: 400px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .headline {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .subtitle {
+    font-size: 20px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 64px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 48px;
+    position: absolute;
+    bottom: 64px;
+  }
+  .placeholder {
+    width: 160px; /* balances the Get Started button */
+  }
+  .dots {
+    display: flex;
+    gap: 12px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .dot.active {
+    background: var(--accent-active);
+  }
+  .get-started-btn {
+    height: 56px;
+    padding: 0 40px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="content">
+  <div class="illustration-area">
+    <svg width="400" height="400" viewBox="0 0 400 400" fill="none">
+      <!-- Clean canvas lines -->
+      <path d="M50 120 Q120 90 200 150 T350 180" stroke="#0F172A" stroke-width="3" fill="none"/>
+      <path d="M50 200 Q120 170 200 230 T350 260" stroke="#64748B" stroke-width="3" stroke-dasharray="8 8" fill="none"/>
+      
+      <!-- Floating Toolbar (Vertical for tablet) -->
+      <g transform="translate(40, 20)">
+        <rect x="0" y="0" width="56" height="200" rx="20" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+        <!-- active tool -->
+        <rect x="14" y="24" width="28" height="28" rx="6" fill="rgba(99,102,241,0.2)"/>
+        <rect x="14" y="68" width="28" height="28" rx="6" fill="#F1F5F9"/>
+        <rect x="14" y="112" width="28" height="28" rx="6" fill="#F1F5F9"/>
+        <circle cx="28" cy="170" r="12" fill="#0F172A"/>
+      </g>
+    </svg>
+  </div>
+  <h1 class="headline">Tools that disappear</h1>
+  <p class="subtitle">The toolbar hides while you write, so you can<br>focus on what matters most.</p>
+</div>
+
+<div class="controls">
+  <div class="placeholder"></div>
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot active"></div>
+  </div>
+  <button class="get-started-btn">Get Started</button>
+</div>
+
+</body>
+</html>

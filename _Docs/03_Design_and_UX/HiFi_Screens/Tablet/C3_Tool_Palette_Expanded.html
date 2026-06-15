@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>C3 — Tool Palette Expanded (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Canvas Background */
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 1px, transparent 1px);
+    background-size: 28px 28px;
+    z-index: 0;
+  }
+
+  /* Ink Content (faded) */
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  .header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 80px;
+    padding: 0 40px 0 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(252,252,252,0.95) 0%, rgba(252,252,252,0) 100%);
+    z-index: 10;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .back-btn {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .page-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* Sidebar Toolbar */
+  .toolbar-wrapper {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 20;
+  }
+  .toolbar {
+    width: 64px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-btn {
+    width: 48px; height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .tool-btn.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-active);
+  }
+  
+  /* Expanded Panel (Flyout) */
+  .flyout-panel {
+    width: 300px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.1);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  /* Section title */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  
+  /* Pen Types */
+  .pen-types {
+    display: flex;
+    gap: 12px;
+  }
+  .pen-type-btn {
+    flex: 1;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+  }
+  .pen-type-btn.active {
+    border-color: var(--accent-active);
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--accent-active);
+  }
+  
+  /* Slider */
+  .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    position: relative;
+  }
+  .slider-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 40%;
+    background: var(--accent-active);
+    border-radius: 2px;
+  }
+  .slider-thumb {
+    position: absolute;
+    left: 40%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px; height: 20px;
+    background: white;
+    border: 2px solid var(--accent-active);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  /* Colors */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    justify-items: center;
+  }
+  .color-swatch {
+    width: 32px; height: 32px;
+    border-radius: 16px;
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .color-swatch.active::after {
+    content: '';
+    width: 40px; height: 40px;
+    border: 2px solid var(--accent-active);
+    border-radius: 20px;
+    position: absolute;
+  }
+  .color-swatch.custom {
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-bg"></div>
+<div class="ink-layer">
+  <svg width="1194" height="834">
+    <!-- Fake content -->
+    <path d="M 300 250 Q 500 200 600 300 T 800 280" fill="none" stroke="#0F172A" stroke-width="2"/>
+    <path d="M 400 350 Q 500 450 700 400" fill="none" stroke="#6366F1" stroke-width="3"/>
+  </svg>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="back-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="page-title">Physics 101 — Page 2</div>
+  </div>
+</div>
+
+<div class="toolbar-wrapper">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="tool-btn active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+    </button>
+    <button class="tool-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+    </button>
+    <button class="tool-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4C13.5 3.5 14.5 3.5 15 4L20 9C20.5 9.5 20.5 10.5 20 11L11 20"/><path d="M16 16L12 12"/></svg>
+    </button>
+    <button class="tool-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13a4.5 4.5 0 1 1 5-8.5"/><path d="M14 6h.01"/><path d="M18 10h.01"/><path d="M16 14h.01"/><path d="M12 17h.01"/><path d="M8 17h.01"/><path d="M5 14h.01"/><path d="M5 10h.01"/></svg>
+    </button>
+  </div>
+  
+  <!-- Flyout Panel -->
+  <div class="flyout-panel">
+    <div>
+      <div class="section-title">Pen Style</div>
+      <div class="pen-types">
+        <button class="pen-type-btn active">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+          <span style="font-size: 12px; font-weight: 500;">Fountain</span>
+        </button>
+        <button class="pen-type-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>
+          <span style="font-size: 12px; font-weight: 500;">Ballpoint</span>
+        </button>
+        <button class="pen-type-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><rect x="7" y="7" width="10" height="10" transform="rotate(45 12 12)"/></svg>
+          <span style="font-size: 12px; font-weight: 500;">Marker</span>
+        </button>
+      </div>
+    </div>
+    
+    <div>
+      <div class="section-title">Stroke Width (2.5pt)</div>
+      <div class="slider-container">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+        <div class="slider-track">
+          <div class="slider-fill"></div>
+          <div class="slider-thumb"></div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
+      </div>
+    </div>
+    
+    <div>
+      <div class="section-title">Color</div>
+      <div class="color-grid">
+        <div class="color-swatch active" style="background: #0F172A;"></div>
+        <div class="color-swatch" style="background: #64748B;"></div>
+        <div class="color-swatch" style="background: #EF4444;"></div>
+        <div class="color-swatch" style="background: #F97316;"></div>
+        <div class="color-swatch" style="background: #F59E0B;"></div>
+        
+        <div class="color-swatch" style="background: #10B981;"></div>
+        <div class="color-swatch" style="background: #06B6D4;"></div>
+        <div class="color-swatch" style="background: #3B82F6;"></div>
+        <div class="color-swatch" style="background: #8B5CF6;"></div>
+        <div class="color-swatch custom"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

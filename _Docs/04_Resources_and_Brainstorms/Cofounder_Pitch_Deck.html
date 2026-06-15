@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Notes — Co-Founder Pitch Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #06080D;
+            --bg-surface: #0D1117;
+            --bg-card: rgba(13, 17, 23, 0.7);
+            --bg-card-hover: rgba(22, 27, 34, 0.9);
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --text-muted: #484F58;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --success: #3FB950;
+            --success-glow: rgba(63, 185, 80, 0.1);
+            --danger: #F85149;
+            --warning: #D29922;
+            --border: rgba(48, 54, 61, 0.6);
+            --border-accent: rgba(99, 102, 241, 0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 272px;
+            min-width: 272px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            padding: 28px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        .sidebar-brand h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        .sidebar-brand p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .sidebar-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            padding: 20px 12px 8px;
+        }
+
+        .nav-links { display: flex; flex-direction: column; gap: 2px; }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+        .nav-links a.active {
+            background: var(--accent-glow);
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+        .nav-links a svg { opacity: 0.6; flex-shrink: 0; }
+        .nav-links a.active svg { opacity: 1; }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 12px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ── MAIN CONTENT ── */
+        .content {
+            margin-left: 272px;
+            padding: 48px 64px 120px;
+            width: calc(100% - 272px);
+            max-width: 1100px;
+        }
+
+        section {
+            margin-bottom: 72px;
+            scroll-margin-top: 48px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .section-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 32px;
+            max-width: 700px;
+        }
+
+        /* ── GRIDS ── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+        }
+        .card:hover {
+            border-color: rgba(255,255,255,0.1);
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+        .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .card p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+
+        .icon-circle {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        /* ── STAT BOXES ── */
+        .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 20%, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── TABLES ── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+        .data-table th {
+            text-align: left;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+            color: var(--text-secondary);
+        }
+        .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ── PRICING CARDS ── */
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            position: relative;
+        }
+        .pricing-card.featured {
+            border-color: var(--accent);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+        .pricing-card.featured::before {
+            content: 'RECOMMENDED';
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+        .pricing-tier {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        .pricing-price {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .pricing-period { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+        .pricing-desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; line-height: 1.5; }
+
+        .feature-list { list-style: none; }
+        .feature-list li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+        }
+        .feature-list .check { color: var(--success); font-weight: 700; font-size: 15px; flex-shrink: 0; }
+        .feature-list .cross { color: var(--text-muted); font-weight: 700; font-size: 15px; flex-shrink: 0; }
+
+        /* ── COMPETITOR TABLE ── */
+        .comp-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-us { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--border-accent); }
+        .badge-green { background: var(--success-glow); color: var(--success); }
+        .badge-red { background: rgba(248, 81, 73, 0.1); color: var(--danger); }
+        .badge-yellow { background: rgba(210, 153, 34, 0.1); color: var(--warning); }
+
+        /* ── TIMELINE ── */
+        .timeline { position: relative; padding-left: 28px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px; top: 6px; bottom: 6px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--success));
+            border-radius: 2px;
+        }
+        .timeline-item { position: relative; margin-bottom: 28px; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px; top: 6px;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--bg-base);
+            border: 2px solid var(--accent);
+        }
+        .timeline-item.done::before { background: var(--accent); }
+        .timeline-date {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-light);
+            margin-bottom: 4px;
+        }
+        .timeline-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+        .timeline-item p { font-size: 13px; color: var(--text-secondary); }
+
+        /* ── PERSONA CARDS ── */
+        .persona-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .persona-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .persona-role {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .persona-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-light);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .persona-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .persona-card ul li {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            padding: 5px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+        .persona-card ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        /* ── CALLOUT BOX ── */
+        .callout {
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            margin-top: 24px;
+        }
+        .callout-danger {
+            background: rgba(248, 81, 73, 0.06);
+            border-color: rgba(248, 81, 73, 0.2);
+        }
+        .callout-success {
+            background: var(--success-glow);
+            border-color: rgba(63, 185, 80, 0.2);
+        }
+        .callout h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+        .callout p { font-size: 13px; color: var(--text-secondary); }
+
+        /* ── COST LINE ITEMS ── */
+        .cost-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+            font-size: 14px;
+        }
+        .cost-line:last-child { border-bottom: none; }
+        .cost-line .label { color: var(--text-secondary); }
+        .cost-line .value { font-weight: 700; }
+        .cost-line.total { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 4px; }
+        .cost-line.total .label { color: var(--text-primary); font-weight: 700; font-size: 16px; }
+        .cost-line.total .value { font-size: 18px; }
+
+        /* ── DIVIDER ── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 48px 0;
+        }
+
+        /* ── PILL TAGS ── */
+        .pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar-container {
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            height: 8px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1s ease;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h1>Horizon Notes</h1>
+        <p>Co-Founder Pitch Deck</p>
+    </div>
+
+    <div class="sidebar-section-label">The Opportunity</div>
+    <div class="nav-links">
+        <a href="#problem" class="active">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            The Problem
+        </a>
+        <a href="#personas">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Who We Serve
+        </a>
+        <a href="#competitors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Competitive Landscape
+        </a>
+    </div>
+
+    <div class="sidebar-section-label">The Product</div>
+    <div class="nav-links">
+        <a href="#features">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Core Features
+        </a>
+        <a href="#pricing">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Pricing & Tiers
+        </a>
+        <a href="#gating">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Feature Gating
+        </a>
+    </div>
+
+    <div class="sidebar-section-label">The Business</div>
+    <div class="nav-links">
+        <a href="#financials">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            Financial Model
+        </a>
+        <a href="#tech">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Tech Architecture
+        </a>
+        <a href="#timeline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Timeline & Roadmap
+        </a>
+        <a href="#risks">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Risks & Mitigations
+        </a>
+    </div>
+
+    <div class="sidebar-section-label">Status</div>
+    <div class="nav-links">
+        <a href="#status">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Current Progress
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        Data sourced from 12 research documents.<br>
+        Last updated: May 31, 2026
+    </div>
+</nav>
+
+
+<!-- ═══════════════════ CONTENT ═══════════════════ -->
+<main class="content">
+
+    <!-- ────────── PROBLEM ────────── -->
+    <section id="problem">
+        <div class="section-label">01 — The Opportunity</div>
+        <div class="section-title">The Problem We Solve</div>
+        <div class="section-subtitle">Students, professionals, and creative thinkers are trapped by rigid, page-bound note-taking apps that force ideas to fit the software — instead of letting the software fit the ideas.</div>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-value">$1B+</div>
+                <div class="stat-label">Market Size (2025)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">12-22%</div>
+                <div class="stat-label">CAGR Growth</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">July '26</div>
+                <div class="stat-label">Samsung Sync Dies</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Apps With Our Combo</div>
+            </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 24px;">
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(248, 81, 73, 0.1); color: #F85149;">🔒</div>
+                <h3>Spatial Mapping Deficit</h3>
+                <p>Human brains think associatively, not vertically. Rigid A4 pages force a translation layer between mental models and documents, increasing cognitive load.</p>
+            </div>
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(210, 153, 34, 0.1); color: #D29922;">⚡</div>
+                <h3>Cognitive Friction</h3>
+                <p>Page breaks interrupt flow state. The brain must save the active concept, execute the transition, and rebuild spatial context on a new canvas.</p>
+            </div>
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(99, 102, 241, 0.1); color: #818CF8;">🔄</div>
+                <h3>Cross-Device Gap</h3>
+                <p>Users capture ideas on phones, organize on tablets, and reference on laptops. Current sync solutions fail with version conflicts and platform lock-in.</p>
+            </div>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+            <h4>🔥 The Samsung Migration Window</h4>
+            <p>Samsung is killing OneNote sync in <strong>July 2026</strong>. Millions of Samsung Galaxy users who relied on cross-device access will be stranded, actively searching for alternatives. This creates a massive migration window we can exploit.</p>
+        </div>
+    </section>
+
+    <!-- ────────── PERSONAS ────────── -->
+    <section id="personas">
+        <div class="section-label">02 — Target Users</div>
+        <div class="section-title">Who We Serve</div>
+        <div class="section-subtitle">Two distinct personas validated through competitive research and app store review analysis.</div>
+
+        <div class="grid-2">
+            <div class="persona-card">
+                <div style="font-size: 32px; margin-bottom: 12px;">🎓</div>
+                <div class="persona-name">Maya Patel</div>
+                <div class="persona-role">21 · Medical Student · iPad Pro + Windows Laptop + iPhone</div>
+                <div class="persona-section-title">Goals</div>
+                <ul>
+                    <li>Create massive, interconnected mind maps for biology & anatomy</li>
+                    <li>Import 100+ page PDF textbooks and annotate without running out of space</li>
+                    <li>All notes sync instantly to her Windows laptop</li>
+                </ul>
+                <div class="persona-section-title">Frustrations</div>
+                <ul>
+                    <li>GoodNotes crashes when her biology whiteboard gets too large</li>
+                    <li>Hates drawing arrows to "continued on next page" in Notability</li>
+                    <li>OneNote sync randomly failed before a major exam</li>
+                </ul>
+                <div class="persona-section-title" style="color: var(--success);">What We Must Deliver</div>
+                <ul>
+                    <li>Lag-free infinite canvas with infinite pan in any direction</li>
+                    <li>Rock-solid sync to Windows</li>
+                    <li>Affordable price (not $100/yr)</li>
+                </ul>
+            </div>
+            <div class="persona-card">
+                <div style="font-size: 32px; margin-bottom: 12px;">💼</div>
+                <div class="persona-name">David Chen</div>
+                <div class="persona-role">34 · Product Manager · Galaxy Z Fold + Tab S9 + MacBook Pro</div>
+                <div class="persona-section-title">Goals</div>
+                <ul>
+                    <li>Clean, minimalist UI — not a cluttered enterprise app</li>
+                    <li>Quickly sketch wireframes, product flows, and meeting notes</li>
+                    <li>Deep nested folders: Quarter → Project → Feature</li>
+                </ul>
+                <div class="persona-section-title">Frustrations</div>
+                <ul>
+                    <li>Samsung Notes killing OneNote sync in July 2026 — will lose MacBook access</li>
+                    <li>OneNote tabs/sections become an unreadable mess at scale</li>
+                    <li>Nebo's folder system is too shallow (only 1 level deep)</li>
+                </ul>
+                <div class="persona-section-title" style="color: var(--success);">What We Must Deliver</div>
+                <ul>
+                    <li>Universal cross-platform sync (Android + Mac + Windows)</li>
+                    <li>Samsung-level deep folder organization</li>
+                    <li>One-time purchase option — hates renting software</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── COMPETITORS ────────── -->
+    <section id="competitors">
+        <div class="section-label">03 — Competitive Landscape</div>
+        <div class="section-title">How We Win</div>
+        <div class="section-subtitle">Every competitor has compromised on either spatial freedom, organizational logic, or cross-platform availability. None have chosen all three.</div>
+
+        <div class="card" style="overflow-x: auto; padding: 0;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>App</th>
+                        <th>Infinite Canvas</th>
+                        <th>Cross-Platform</th>
+                        <th>Organization</th>
+                        <th>Pricing</th>
+                        <th>We Exploit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">Horizon Notes (Us)</strong></td>
+                        <td><span class="comp-badge badge-us">✅ Bi-directional</span></td>
+                        <td><span class="comp-badge badge-us">✅ All OS</span></td>
+                        <td><span class="comp-badge badge-us">✅ Deep Nesting</span></td>
+                        <td><span class="comp-badge badge-us">Freemium + Lifetime</span></td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">Samsung Notes</strong></td>
+                        <td><span class="comp-badge badge-red">❌ Vertical only</span></td>
+                        <td><span class="comp-badge badge-red">❌ Samsung only</span></td>
+                        <td><span class="comp-badge badge-green">✅ Deep</span></td>
+                        <td>Free (bundled)</td>
+                        <td>Sync dying July '26</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">GoodNotes 6</strong></td>
+                        <td><span class="comp-badge badge-yellow">⚠ Laggy "Whiteboard"</span></td>
+                        <td><span class="comp-badge badge-red">❌ Apple-centric</span></td>
+                        <td><span class="comp-badge badge-green">✅ Deep</span></td>
+                        <td>$12-$36/yr sub</td>
+                        <td>Android/Windows abandoned</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">Notability</strong></td>
+                        <td><span class="comp-badge badge-red">❌ Fixed width</span></td>
+                        <td><span class="comp-badge badge-red">❌ Apple only</span></td>
+                        <td><span class="comp-badge badge-yellow">⚠ Simple</span></td>
+                        <td>$20-$100/yr sub</td>
+                        <td>Predatory pricing backlash</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">OneNote</strong></td>
+                        <td><span class="comp-badge badge-green">✅ True infinite</span></td>
+                        <td><span class="comp-badge badge-green">✅ All OS</span></td>
+                        <td><span class="comp-badge badge-red">❌ Messy, bloated</span></td>
+                        <td>Free</td>
+                        <td>UX clutter, no mobile focus</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">Nebo</strong></td>
+                        <td><span class="comp-badge badge-green">✅ True infinite</span></td>
+                        <td><span class="comp-badge badge-yellow">⚠ Per-OS fee</span></td>
+                        <td><span class="comp-badge badge-red">❌ 1-level deep</span></td>
+                        <td>$8-$12 per platform</td>
+                        <td>Shallow folders, pay-per-OS</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+            <h4>🧬 The Winning Formula</h4>
+            <p><strong>The Canvas of Nebo</strong> + <strong>The Folders of Samsung Notes</strong> + <strong>The UX Polish of GoodNotes</strong> + <strong>The Price Model of Noteshelf</strong> — on every platform simultaneously.</p>
+        </div>
+    </section>
+
+    <!-- ────────── FEATURES ────────── -->
+    <section id="features">
+        <div class="section-label">04 — The Product</div>
+        <div class="section-title">Core Features</div>
+        <div class="section-subtitle">Three non-negotiable MVP pillars and our complete feature set.</div>
+
+        <div class="grid-3" style="margin-bottom: 32px;">
+            <div class="card" style="border-top: 3px solid var(--accent);">
+                <div class="icon-circle" style="background: var(--accent-glow); color: var(--accent-light);">📚</div>
+                <h3>Pillar 1: Digital Bookshelf</h3>
+                <p>Infinitely nestable folder system displayed as a beautiful visual grid of thumbnails. Feels organized like Finder, looks beautiful like a real bookshelf.</p>
+            </div>
+            <div class="card" style="border-top: 3px solid var(--accent);">
+                <div class="icon-circle" style="background: var(--accent-glow); color: var(--accent-light);">🌊</div>
+                <h3>Pillar 2: Anchored Canvas</h3>
+                <p>High-performance bi-directional infinite canvas, anchored by a Minimap and Single-Tap Rotation tool. Total spatial freedom without getting lost.</p>
+            </div>
+            <div class="card" style="border-top: 3px solid var(--accent);">
+                <div class="icon-circle" style="background: var(--accent-glow); color: var(--accent-light);">🧘</div>
+                <h3>Pillar 3: Focus Mode</h3>
+                <p>Toolbar takes up <10% of screen. With a single gesture, the UI completely vanishes for a 100% immersive canvas experience.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 20px;">Complete Feature Set</h3>
+            <div class="grid-2">
+                <div>
+                    <div class="persona-section-title" style="color: var(--accent-light); margin-top: 0;">Canvas & Drawing</div>
+                    <ul class="feature-list">
+                        <li><span class="check">✓</span> Infinite Canvas (pan, zoom, borderless)</li>
+                        <li><span class="check">✓</span> Vector-Based Ink Engine (<10ms latency)</li>
+                        <li><span class="check">✓</span> Pressure Sensitivity (Apple Pencil, S-Pen)</li>
+                        <li><span class="check">✓</span> Glassmorphic Floating Tool Palette</li>
+                        <li><span class="check">✓</span> Dual-Page Split View</li>
+                        <li><span class="check">✓</span> Single-Tap Page Rotation</li>
+                        <li><span class="check">✓</span> Pen, Pencil, Highlighter, Eraser, Lasso</li>
+                        <li><span class="check">✓</span> Full Color Wheel + Custom Hex</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="persona-section-title" style="color: var(--accent-light); margin-top: 0;">Data & Sync</div>
+                    <ul class="feature-list">
+                        <li><span class="check">✓</span> Local-First Storage (offline always works)</li>
+                        <li><span class="check">✓</span> Eventual Cloud Sync to Supabase</li>
+                        <li><span class="check">✓</span> Cross-Platform: iOS, Android, macOS, Windows</li>
+                        <li><span class="check">✓</span> Page-Level Conflict Resolution</li>
+                        <li><span class="check">✓</span> Export as PDF, PNG, SVG</li>
+                        <li><span class="check">✓</span> Deep Folder Nesting (unlimited depth)</li>
+                        <li><span class="check">✓</span> Custom Notebook Covers</li>
+                        <li><span class="check">✓</span> Handwriting Search (OCR, Pro)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── PRICING ────────── -->
+    <section id="pricing">
+        <div class="section-label">05 — Monetization</div>
+        <div class="section-title">Pricing & Tiers</div>
+        <div class="section-subtitle">Freemium model designed to maximize conversions while maintaining user trust. Strategy rated 8.5/10.</div>
+
+        <div class="grid-3">
+            <div class="pricing-card">
+                <div class="pricing-tier" style="color: var(--text-muted);">Free</div>
+                <div class="pricing-price">₹0</div>
+                <div class="pricing-period">Forever free</div>
+                <div class="pricing-desc">The hook. Designed to destroy competitors on free value and get users addicted to the canvas.</div>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span> Infinite Canvas (full, unlimited)</li>
+                    <li><span class="check">✓</span> 3 Notebooks, 10 pages each</li>
+                    <li><span class="check">✓</span> Pen, Pencil, Eraser, Text</li>
+                    <li><span class="check">✓</span> 12 basic colors, 3 brush sizes</li>
+                    <li><span class="check">✓</span> Local storage + 1 device backup</li>
+                    <li><span class="check">✓</span> PDF export (with watermark)</li>
+                    <li><span class="cross">✗</span> Highlighter</li>
+                    <li><span class="cross">✗</span> Dark Mode</li>
+                    <li><span class="cross">✗</span> Multi-device sync</li>
+                </ul>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-tier" style="color: var(--accent-light);">Pro — Bread & Butter</div>
+                <div class="pricing-price">₹499<span style="font-size: 16px; font-weight: 500; color: var(--text-muted);">/yr</span></div>
+                <div class="pricing-period">₹42/month · Students pick this</div>
+                <div class="pricing-desc">The core recurring revenue engine. Unlocks everything a serious user needs.</div>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span> Everything in Free</li>
+                    <li><span class="check">✓</span> Unlimited Notebooks & Pages</li>
+                    <li><span class="check">✓</span> Highlighter + All Shapes</li>
+                    <li><span class="check">✓</span> Full Color Wheel + Custom Hex</li>
+                    <li><span class="check">✓</span> Multi-device Cloud Sync</li>
+                    <li><span class="check">✓</span> Dark Mode + All Backgrounds</li>
+                    <li><span class="check">✓</span> Clean PDF/PNG/SVG Export</li>
+                    <li><span class="check">✓</span> Focus Mode</li>
+                    <li><span class="check">✓</span> OCR Handwriting Search</li>
+                </ul>
+            </div>
+
+            <div class="pricing-card" style="border-top: 3px solid var(--success);">
+                <div class="pricing-tier" style="color: var(--success);">Founding Lifetime</div>
+                <div class="pricing-price">₹1,999</div>
+                <div class="pricing-period">One-time · Limited to 2,000 seats</div>
+                <div class="pricing-desc">Cash injection from early believers. Creates real scarcity: "Only 847 spots remaining."</div>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span> Everything in Pro — forever</li>
+                    <li><span class="check">✓</span> Never pay a subscription</li>
+                    <li><span class="check">✓</span> Template Marketplace (buy + sell)</li>
+                    <li><span class="check">✓</span> Unlimited Version History</li>
+                    <li><span class="check">✓</span> Priority Support</li>
+                    <li><span class="check">✓</span> "Founding Member" badge</li>
+                    <li><span class="check">✓</span> Early access to new features</li>
+                </ul>
+                <div class="callout-success callout" style="margin-top: 20px; padding: 14px 18px;">
+                    <p style="font-size: 12px;">After 2,000 seats sell → Lifetime option <strong>disappears forever</strong>. All future users → Subscription only.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── FEATURE GATING ────────── -->
+    <section id="gating">
+        <div class="section-label">06 — Conversion Strategy</div>
+        <div class="section-title">Top 5 Upgrade Triggers</div>
+        <div class="section-subtitle">The exact moments a free user thinks "OK, I need to pay." Ordered by conversion power.</div>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr><th>#</th><th>Trigger Moment</th><th>What Happens</th><th>Conversion Power</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color: var(--text-primary); font-weight: 700;">1</td>
+                        <td style="color: var(--text-primary);">"I need more notebooks"</td>
+                        <td>Hit the 3 notebook limit after 1-2 weeks of use</td>
+                        <td><span class="comp-badge badge-red" style="background: rgba(248,81,73,0.15);">🔴 CRITICAL</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-primary); font-weight: 700;">2</td>
+                        <td style="color: var(--text-primary);">"I need it on my laptop too"</td>
+                        <td>Gets a second device and wants multi-device sync</td>
+                        <td><span class="comp-badge badge-red" style="background: rgba(248,81,73,0.15);">🔴 CRITICAL</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-primary); font-weight: 700;">3</td>
+                        <td style="color: var(--text-primary);">"I can't submit this with a watermark"</td>
+                        <td>Student needs clean PDF export for homework</td>
+                        <td><span class="comp-badge badge-yellow">🟠 HIGH</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-primary); font-weight: 700;">4</td>
+                        <td style="color: var(--text-primary);">"I want dark mode"</td>
+                        <td>Late night studying — dark mode is behind the paywall</td>
+                        <td><span class="comp-badge badge-yellow">🟠 HIGH</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-primary); font-weight: 700;">5</td>
+                        <td style="color: var(--text-primary);">"I need the highlighter"</td>
+                        <td>Annotating PDFs/textbooks without a highlighter tool</td>
+                        <td><span class="comp-badge badge-green">🟢 MEDIUM</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+            <h4>💡 The Golden Rule of Gating</h4>
+            <p>The canvas itself is always fully infinite and free. We gate the <strong>tools</strong> (highlighter, full colors, brush sizes) — not the canvas. Free users fall in love with the space but want better tools. The canvas is the hook, the tools are the upsell.</p>
+        </div>
+    </section>
+
+    <!-- ────────── FINANCIALS ────────── -->
+    <section id="financials">
+        <div class="section-label">07 — The Numbers</div>
+        <div class="section-title">Financial Model</div>
+        <div class="section-subtitle">Extremely lean operations. 85-95% profit margins. Almost impossible to lose money.</div>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-value" style="color: #F85149; -webkit-text-fill-color: #F85149;">₹14,765</div>
+                <div class="stat-label">Total Cost to Build</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" style="color: var(--success); -webkit-text-fill-color: var(--success);">₹15.6L</div>
+                <div class="stat-label">Year 1 Profit</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">Month 6</div>
+                <div class="stat-label">Breakeven (Day 1)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">85-95%</div>
+                <div class="stat-label">Profit Margin</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- COSTS -->
+            <div class="card">
+                <h3 style="color: var(--danger); margin-bottom: 24px;">Monthly Burn Rate</h3>
+                <div class="cost-line"><span class="label">AI Coding Tools (Cursor)</span><span class="value">₹1,700</span></div>
+                <div class="cost-line"><span class="label">Apple Developer Account</span><span class="value">₹708</span></div>
+                <div class="cost-line"><span class="label">Domain + DNS</span><span class="value">₹125</span></div>
+                <div class="cost-line"><span class="label">Backend (Supabase)</span><span class="value" style="color: var(--success);">₹0 (Free Tier)</span></div>
+                <div class="cost-line total">
+                    <span class="label">Total Monthly Cost</span>
+                    <span class="value" style="color: var(--danger);">₹2,533</span>
+                </div>
+                <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted); font-style: italic;">Less than a Netflix + Spotify subscription combined.</p>
+            </div>
+
+            <!-- REVENUE -->
+            <div class="card">
+                <h3 style="color: var(--success); margin-bottom: 24px;">Revenue Streams</h3>
+                <div class="cost-line"><span class="label"><strong>Stream A:</strong> Subscriptions (₹499/yr)</span><span class="value pill">Recurring</span></div>
+                <div class="cost-line"><span class="label"><strong>Stream B:</strong> Founding Lifetime (₹1,999)</span><span class="value pill">Capped at 2,000</span></div>
+                <div class="cost-line"><span class="label"><strong>Stream C:</strong> Template Marketplace (30%)</span><span class="value pill">Phase 2</span></div>
+                <div style="margin-top: 24px;">
+                    <div class="persona-section-title" style="color: var(--success); margin-top: 0;">Year 1 Projection</div>
+                    <div class="cost-line"><span class="label">Total Downloads</span><span class="value">40,000</span></div>
+                    <div class="cost-line"><span class="label">Total Paying Users</span><span class="value">1,400</span></div>
+                    <div class="cost-line"><span class="label">Total Revenue</span><span class="value" style="color: var(--success);">₹20 Lakh</span></div>
+                    <div class="cost-line"><span class="label">Total Costs</span><span class="value" style="color: var(--danger);">₹4.5 Lakh</span></div>
+                    <div class="cost-line total"><span class="label">Net Profit</span><span class="value" style="color: var(--success);">₹15.6 Lakh (~$18,700)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAFETY NET -->
+        <div class="callout-success callout" style="margin-top: 24px;">
+            <h4>🛡️ The Safety Net: Why You Literally Cannot Lose Money</h4>
+            <p>Monthly cost is ₹2,533. You need just <strong>6 subscription users</strong> to cover all costs. Even in the worst case scenario (15K downloads, 1% conversion = 150 users), you still profit ₹33,600/year. The 2,000-seat lifetime cap pre-funds 23 years of server costs upfront (₹33.98L cash).</p>
+        </div>
+    </section>
+
+    <!-- ────────── TECH ────────── -->
+    <section id="tech">
+        <div class="section-label">08 — Engineering</div>
+        <div class="section-title">Technical Architecture</div>
+        <div class="section-subtitle">Ship fast with Flutter V1, prove product-market fit, upgrade to native canvas only if needed.</div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Canvas Engine</h3>
+                <div class="cost-line"><span class="label">Framework</span><span class="value">Flutter (CustomPaint)</span></div>
+                <div class="cost-line"><span class="label">Ink Library</span><span class="value">perfect_freehand</span></div>
+                <div class="cost-line"><span class="label">V1 Latency</span><span class="value">~20-35ms</span></div>
+                <div class="cost-line"><span class="label">V1.1 Upgrade</span><span class="value">PencilKit / SurfaceView (~9ms)</span></div>
+                <div class="cost-line"><span class="label">Platforms</span><span class="value">Android + iOS (one codebase)</span></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Sync Engine</h3>
+                <div class="cost-line"><span class="label">Type</span><span class="value">Eventual Sync (not real-time)</span></div>
+                <div class="cost-line"><span class="label">Granularity</span><span class="value">Page-level (not notebook)</span></div>
+                <div class="cost-line"><span class="label">Backend</span><span class="value">Supabase (free tier)</span></div>
+                <div class="cost-line"><span class="label">Local DB</span><span class="value">SQLite / Isar</span></div>
+                <div class="cost-line"><span class="label">Conflict Handling</span><span class="value">Fork + manual merge</span></div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 20px;">3 Critical Performance Optimizations</h3>
+            <div class="grid-3">
+                <div>
+                    <div style="color: var(--accent-light); font-weight: 700; font-size: 13px; margin-bottom: 8px;">1. Stroke Rasterization</div>
+                    <p style="font-size: 13px; color: var(--text-secondary);">After pen lifts, "bake" strokes into static bitmaps. Old strokes cost ZERO GPU cycles.</p>
+                </div>
+                <div>
+                    <div style="color: var(--accent-light); font-weight: 700; font-size: 13px; margin-bottom: 8px;">2. Viewport Culling</div>
+                    <p style="font-size: 13px; color: var(--text-secondary);">Only render strokes visible on screen. 100 or 10,000 strokes = same performance.</p>
+                </div>
+                <div>
+                    <div style="color: var(--accent-light); font-weight: 700; font-size: 13px; margin-bottom: 8px;">3. Level of Detail (LOD)</div>
+                    <p style="font-size: 13px; color: var(--text-secondary);">At low zoom, swap vectors for low-res bitmaps. Full detail only when zoomed in.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── TIMELINE ────────── -->
+    <section id="timeline">
+        <div class="section-label">09 — Execution</div>
+        <div class="section-title">Build Roadmap</div>
+        <div class="section-subtitle">5 months to MVP launch. 18 months to ₹33.8 Lakh cumulative profit.</div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 24px;">V1 MVP (5 Months)</h3>
+                <div class="timeline">
+                    <div class="timeline-item done">
+                        <div class="timeline-date">Month 1 — Design ✅</div>
+                        <h4>UI/UX Design & Wireframes</h4>
+                        <p>49 high-fidelity screens completed for Phone + Tablet. Design system finalized.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Month 2 — Build App</div>
+                        <h4>Flutter Scaffolding & Core Canvas</h4>
+                        <p>CustomPaint + InteractiveViewer. Basic pen, pencil, eraser tools. Infinite pan/zoom.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Month 3 — Canvas Engine</div>
+                        <h4>Performance Optimizations</h4>
+                        <p>Stroke rasterization, viewport culling, folder system with infinite nesting.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Month 4 — Sync</div>
+                        <h4>Cloud Sync & Cross-Platform</h4>
+                        <p>Supabase integration, page-level sync, offline-first architecture.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date" style="color: var(--success);">Month 5 — Launch 🚀</div>
+                        <h4>Beta Test & App Store Submission</h4>
+                        <p>RevenueCat paywalls, marketing assets, App Store + Play Store launch.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 24px;">Post-Launch Evolution</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">V1.1 — Months 6-8</div>
+                        <h4>Power User Features</h4>
+                        <p>Viewport culling + LOD, OCR handwriting search, background auto-sync, highlighter + full color wheel.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">V2 — If App Takes Off</div>
+                        <h4>Native Canvas Rewrite</h4>
+                        <p>PencilKit on iOS, SurfaceView on Android. CRDT-based real-time sync. Template Marketplace.</p>
+                    </div>
+                </div>
+
+                <div class="divider" style="margin: 32px 0;"></div>
+
+                <h3 style="margin-bottom: 16px;">Revenue Growth Projection</h3>
+                <div class="cost-line"><span class="label">Month 6 (Launch)</span><span class="value" style="color: var(--success);">₹1.15L profit</span></div>
+                <div class="cost-line"><span class="label">Months 7-8 (Samsung Wave)</span><span class="value" style="color: var(--success);">₹3L-3.8L/mo 🔥</span></div>
+                <div class="cost-line"><span class="label">Months 9-12 (Stabilization)</span><span class="value" style="color: var(--success);">₹1.7L-2.5L/mo</span></div>
+                <div class="cost-line"><span class="label">Month 18 (Cumulative)</span><span class="value" style="color: var(--success);">₹33.8L (~$40.5K)</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── RISKS ────────── -->
+    <section id="risks">
+        <div class="section-label">10 — Risk Assessment</div>
+        <div class="section-title">Risks & Mitigations</div>
+        <div class="section-subtitle">Three key risks with clear mitigation strategies.</div>
+
+        <div class="grid-3">
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(248, 81, 73, 0.1); color: #F85149;">⚠️</div>
+                <h3>Performance at Scale</h3>
+                <p style="margin-bottom: 16px;">Infinite canvas with heavy content could lag on older devices.</p>
+                <div style="font-size: 12px; font-weight: 700; color: var(--success); margin-bottom: 6px;">MITIGATION</div>
+                <p style="font-size: 13px;">Stroke rasterization + viewport culling + LOD from Day 1. Upgrade to native PencilKit/SurfaceView in V1.1 if needed.</p>
+            </div>
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(248, 81, 73, 0.1); color: #F85149;">⚠️</div>
+                <h3>Sync Reliability</h3>
+                <p style="margin-bottom: 16px;">Sync failure is the graveyard of note apps. Data loss = dead app.</p>
+                <div style="font-size: 12px; font-weight: 700; color: var(--success); margin-bottom: 6px;">MITIGATION</div>
+                <p style="font-size: 13px;">Page-level sync (not notebook). Conflict = fork, never overwrite. Local-first architecture means offline always works.</p>
+            </div>
+            <div class="card">
+                <div class="icon-circle" style="background: rgba(248, 81, 73, 0.1); color: #F85149;">⚠️</div>
+                <h3>User Acquisition</h3>
+                <p style="margin-bottom: 16px;">Entering a crowded market with established players.</p>
+                <div style="font-size: 12px; font-weight: 700; color: var(--success); margin-bottom: 6px;">MITIGATION</div>
+                <p style="font-size: 13px;">Target Samsung Notes users losing sync in July '26. SEO + content marketing around "Samsung Notes alternative." Exploit subscription fatigue.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ────────── STATUS ────────── -->
+    <section id="status">
+        <div class="section-label">11 — Current Status</div>
+        <div class="section-title">What's Already Done</div>
+        <div class="section-subtitle">We are not starting from zero. Phase 1-4 of the 14-day design sprint are complete.</div>
+
+        <div class="card">
+            <div class="grid-2" style="gap: 32px;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-weight: 700; font-size: 14px;">Overall Design Progress</span>
+                        <span style="font-weight: 700; font-size: 14px; color: var(--success);">100%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, var(--accent), var(--success));"></div>
+                    </div>
+
+                    <div style="margin-top: 28px;">
+                        <div class="cost-line"><span class="label">✅ Research & Discovery</span><span class="value" style="color: var(--success);">12 documents</span></div>
+                        <div class="cost-line"><span class="label">✅ Strategy & Business</span><span class="value" style="color: var(--success);">6 documents</span></div>
+                        <div class="cost-line"><span class="label">✅ Information Architecture</span><span class="value" style="color: var(--success);">User flows mapped</span></div>
+                        <div class="cost-line"><span class="label">✅ Hi-Fi Wireframes</span><span class="value" style="color: var(--success);">49 screens</span></div>
+                        <div class="cost-line"><span class="label">⏳ Brand Name</span><span class="value" style="color: var(--warning);">Pending decision</span></div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 16px;">Deliverables Completed</h3>
+                    <ul class="feature-list">
+                        <li><span class="check">✓</span> Competitive Analysis (6 competitors)</li>
+                        <li><span class="check">✓</span> User Personas (2 validated personas)</li>
+                        <li><span class="check">✓</span> Feature Matrix (vs. all competitors)</li>
+                        <li><span class="check">✓</span> Brand Identity Document</li>
+                        <li><span class="check">✓</span> Feature Gating Strategy</li>
+                        <li><span class="check">✓</span> Financial Model (Approved)</li>
+                        <li><span class="check">✓</span> Technical Architecture (Approved)</li>
+                        <li><span class="check">✓</span> 49 Hi-Fi Screens (Phone + Tablet)</li>
+                        <li><span class="check">✓</span> Design System Specification</li>
+                        <li><span class="check">✓</span> Developer Handoff Document</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout" style="margin-top: 24px;">
+            <h4>🚀 Next Step: Begin Development</h4>
+            <p>The entire design and strategy phase is complete. The only remaining decision is <strong>finalizing the brand name</strong>. Once agreed upon, we begin Month 2 of the roadmap: Flutter scaffolding and core canvas implementation.</p>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    // Scroll spy for sidebar active link
+    const sections = document.querySelectorAll("section");
+    const navLinks = document.querySelectorAll(".nav-links a");
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove("active");
+                    if (link.getAttribute("href") === "#" + entry.target.id) {
+                        link.classList.add("active");
+                    }
+                });
+            }
+        });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    sections.forEach(section => observer.observe(section));
+</script>
+
+</body>
+</html>

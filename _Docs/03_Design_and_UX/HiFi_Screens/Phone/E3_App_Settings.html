@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>E3 — App Settings (Phone)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header */
+  .header {
+    height: 104px;
+    padding: 54px 24px 16px;
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; color: var(--text-primary);
+    cursor: pointer;
+    margin-right: 12px;
+  }
+  .header-title {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .content {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding: 0 16px;
+  }
+  
+  /* Settings List */
+  .settings-list {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .setting-item:last-child { border-bottom: none; }
+  .setting-info { flex: 1; }
+  .setting-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .setting-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  
+  .setting-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+  .chevron { color: var(--text-muted); }
+
+  /* Toggle Switch */
+  .switch {
+    width: 44px; height: 24px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    position: relative;
+  }
+  .switch.active { background: var(--accent-active); }
+  .switch-thumb {
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 2px; left: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .switch.active .switch-thumb { left: 22px; }
+  
+  /* Appearance Segmented Control */
+  .appearance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .appearance-opt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .appearance-preview {
+    width: 100%;
+    height: 72px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .appearance-opt.active .appearance-preview {
+    border-color: var(--accent-active);
+  }
+  .appearance-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .appearance-opt.active .appearance-label {
+    color: var(--accent-active);
+    font-weight: 600;
+  }
+  
+  .preview-light { background: #F1F5F9; }
+  .preview-light::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: white; border-top: 1px solid #E2E8F0;
+  }
+  .preview-dark { background: #0F172A; }
+  .preview-dark::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: #1E293B; border-top: 1px solid #334155;
+  }
+  .preview-system { background: linear-gradient(to right, #F1F5F9 50%, #0F172A 50%); }
+  .preview-system::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; 
+    background: linear-gradient(to right, white 50%, #1E293B 50%);
+    border-top: 1px solid #E2E8F0;
+  }
+  
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </button>
+  <div class="header-title">App Settings</div>
+</div>
+
+<div class="content">
+  <div class="section-title">Appearance</div>
+  <div class="settings-list">
+    <div class="appearance-grid">
+      <div class="appearance-opt">
+        <div class="appearance-preview preview-light"></div>
+        <div class="appearance-label">Light</div>
+      </div>
+      <div class="appearance-opt">
+        <div class="appearance-preview preview-dark"></div>
+        <div class="appearance-label">Dark</div>
+      </div>
+      <div class="appearance-opt active">
+        <div class="appearance-preview preview-system"></div>
+        <div class="appearance-label">System</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-title">Notebook Defaults</div>
+  <div class="settings-list">
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="setting-title">Default Template</div>
+      </div>
+      <div class="setting-value">
+        Dot Grid
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="setting-title">Default Paper Color</div>
+      </div>
+      <div class="setting-value">
+        System
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-title">Input & Drawing</div>
+  <div class="settings-list">
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="setting-title">Palm Rejection</div>
+        <div class="setting-desc">Ignore touch input while using stylus</div>
+      </div>
+      <div class="switch active">
+        <div class="switch-thumb"></div>
+      </div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="setting-title">Haptic Feedback</div>
+        <div class="setting-desc">Vibrate on actions and drawing</div>
+      </div>
+      <div class="switch active">
+        <div class="switch-thumb"></div>
+      </div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="setting-title">Stylus Settings</div>
+      </div>
+      <div class="setting-value">
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

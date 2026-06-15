@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1194, initial-scale=1.0">
+<title>C6 — Page Strip Expanded (Tablet)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #FCFCFC;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --accent: #0F172A;
+    --accent-active: #6366F1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 1194px;
+    height: 834px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Canvas Background */
+  .canvas-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #D4D4D8 1px, transparent 1px);
+    background-size: 28px 28px;
+    z-index: 0;
+  }
+  
+  /* Ink Content (faded) */
+  .ink-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  /* Backdrop Dim */
+  .backdrop-dim {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 15;
+  }
+
+  /* Expanded Bottom Strip */
+  .bottom-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 280px;
+    background: #FFFFFF;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -12px 48px rgba(15, 23, 42, 0.1);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+  }
+  .strip-header {
+    height: 56px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .strip-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .strip-actions {
+    display: flex;
+    gap: 24px;
+    color: var(--accent-active);
+    font-weight: 500;
+    font-size: 15px;
+    align-items: center;
+  }
+  
+  /* Strip Content */
+  .strip-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 24px;
+    overflow-x: auto;
+  }
+  
+  .page-card {
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .page-thumbnail {
+    width: 140px; height: 186px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: relative;
+    background-image: radial-gradient(circle, #CBD5E1 1px, transparent 1px);
+    background-size: 20px 20px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+  }
+  .page-card.active .page-thumbnail {
+    border-color: var(--accent-active);
+    box-shadow: 0 0 0 2px var(--accent-active);
+  }
+  .ink-line {
+    position: absolute;
+    height: 1.5px;
+    background: var(--text-primary);
+    opacity: 0.6;
+    border-radius: 1px;
+  }
+  .page-number {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .page-card.active .page-number {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  
+  .add-page-card {
+    min-width: 140px;
+    height: 186px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: 30px; /* offset for page number text */
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-bg"></div>
+<div class="ink-layer">
+  <svg width="1194" height="834">
+    <path d="M 300 250 Q 500 200 600 300 T 800 280" fill="none" stroke="#0F172A" stroke-width="2"/>
+  </svg>
+</div>
+
+<div class="backdrop-dim"></div>
+
+<div class="bottom-strip">
+  <div class="strip-header">
+    <div class="strip-title">Physics 101 — Pages</div>
+    <div class="strip-actions">
+      <span>Edit</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+  
+  <div class="strip-content">
+    <!-- Page 1 -->
+    <div class="page-card">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:60%;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:70%;"></div>
+        <div class="ink-line" style="top:35%; left:15%; width:40%;"></div>
+      </div>
+      <div class="page-number">1</div>
+    </div>
+    
+    <!-- Page 2 -->
+    <div class="page-card">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:50%;"></div>
+        <circle cx="50%" cy="60%" r="20" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3"/>
+      </div>
+      <div class="page-number">2</div>
+    </div>
+    
+    <!-- Page 3 (Active) -->
+    <div class="page-card active">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:75%;"></div>
+        <div class="ink-line" style="top:30%; left:15%; width:80%;"></div>
+      </div>
+      <div class="page-number">3</div>
+    </div>
+    
+    <!-- Page 4 -->
+    <div class="page-card">
+      <div class="page-thumbnail">
+        <div class="ink-line" style="top:20%; left:15%; width:40%;"></div>
+      </div>
+      <div class="page-number">4</div>
+    </div>
+    
+    <!-- Add Page -->
+    <div class="add-page-card">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
