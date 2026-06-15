@@ -102,6 +102,8 @@ class CanvasController extends ChangeNotifier {
   final ValueNotifier<Rect?> exportFrameNotifier = ValueNotifier(null);
   final ValueNotifier<String?> pendingExportFormatNotifier = ValueNotifier(null);
   final ValueNotifier<String> pendingExportNameNotifier = ValueNotifier('horizon_export');
+  bool pendingExportIncludeGrid = false;
+  bool pendingExportTransparentBackground = false;
 
   DrawingTool currentTool = DrawingTool.pan;
   Color currentColor = AppTheme.primary;

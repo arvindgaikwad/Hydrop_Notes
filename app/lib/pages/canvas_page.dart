@@ -549,9 +549,35 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                                 );
 
                                 if (format == 'png') {
-                                  await ExportController.exportToImage(context, _canvasController.layersNotifier.value, cropRect: rect, fileName: _canvasController.pendingExportNameNotifier.value);
+                                  await ExportController.exportToImage(
+                                    context, 
+                                    _canvasController.layersNotifier.value, 
+                                    cropRect: rect, 
+                                    fileName: _canvasController.pendingExportNameNotifier.value,
+                                    includeGrid: _canvasController.pendingExportIncludeGrid,
+                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                  );
+                                } else if (format == 'svg') {
+                                  await ExportController.exportToSvg(
+                                    context, 
+                                    _canvasController.layersNotifier.value, 
+                                    cropRect: rect, 
+                                    fileName: _canvasController.pendingExportNameNotifier.value,
+                                    includeGrid: _canvasController.pendingExportIncludeGrid,
+                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                  );
                                 } else {
-                                  await ExportController.exportToPdf(_canvasController.layersNotifier.value, canvasType: widget.note.canvasType, cropRect: rect, fileName: _canvasController.pendingExportNameNotifier.value);
+                                  await ExportController.exportToPdf(
+                                    _canvasController.layersNotifier.value, 
+                                    canvasType: widget.note.canvasType, 
+                                    cropRect: rect, 
+                                    fileName: _canvasController.pendingExportNameNotifier.value,
+                                    includeGrid: _canvasController.pendingExportIncludeGrid,
+                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                  );
                                 }
 
                                 if (context.mounted) {
@@ -581,86 +607,114 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
         String selectedFormat = 'png';
         String selectedRegion = 'full';
         String fileName = 'horizon_export';
+        bool includeGrid = false;
+        bool transparentBackground = false;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
               backgroundColor: HydropTheme.of(context).surface,
               title: Text('Export Canvas', style: TextStyle(color: HydropTheme.of(context).textPrimary)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('File Name', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'horizon_export',
-                      filled: true,
-                      fillColor: HydropTheme.of(context).surfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('File Name', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'horizon_export',
+                        filled: true,
+                        fillColor: HydropTheme.of(context).surfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
+                      onChanged: (val) {
+                        fileName = val.trim().isEmpty ? 'horizon_export' : val.trim();
+                      },
                     ),
-                    onChanged: (val) {
-                      fileName = val.trim().isEmpty ? 'horizon_export' : val.trim();
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Format', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      ChoiceChip(
-                        label: const Text('PNG Image'),
-                        selected: selectedFormat == 'png',
-                        onSelected: (val) => setStateDialog(() => selectedFormat = 'png'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(width: 8),
-                      ChoiceChip(
-                        label: const Text('PDF Document'),
-                        selected: selectedFormat == 'pdf',
-                        onSelected: (val) => setStateDialog(() => selectedFormat = 'pdf'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Region', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Full Canvas (Auto)'),
-                        selected: selectedRegion == 'full',
-                        onSelected: (val) => setStateDialog(() => selectedRegion = 'full'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                      ChoiceChip(
-                        label: const Text('A4 Frame'),
-                        selected: selectedRegion == 'a4',
-                        onSelected: (val) => setStateDialog(() => selectedRegion = 'a4'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                      ChoiceChip(
-                        label: const Text('Long Form'),
-                        selected: selectedRegion == 'long',
-                        onSelected: (val) => setStateDialog(() => selectedRegion = 'long'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                      ChoiceChip(
-                        label: const Text('Custom Region'),
-                        selected: selectedRegion == 'custom',
-                        onSelected: (val) => setStateDialog(() => selectedRegion = 'custom'),
-                        selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                      ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Text('Format', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('PNG Image'),
+                          selected: selectedFormat == 'png',
+                          onSelected: (val) => setStateDialog(() => selectedFormat = 'png'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                        ChoiceChip(
+                          label: const Text('PDF Document'),
+                          selected: selectedFormat == 'pdf',
+                          onSelected: (val) => setStateDialog(() => selectedFormat = 'pdf'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                        ChoiceChip(
+                          label: const Text('SVG Vector'),
+                          selected: selectedFormat == 'svg',
+                          onSelected: (val) => setStateDialog(() => selectedFormat = 'svg'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Region', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Full Canvas (Auto)'),
+                          selected: selectedRegion == 'full',
+                          onSelected: (val) => setStateDialog(() => selectedRegion = 'full'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                        ChoiceChip(
+                          label: const Text('A4 Frame'),
+                          selected: selectedRegion == 'a4',
+                          onSelected: (val) => setStateDialog(() => selectedRegion = 'a4'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Long Form'),
+                          selected: selectedRegion == 'long',
+                          onSelected: (val) => setStateDialog(() => selectedRegion = 'long'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Custom Region'),
+                          selected: selectedRegion == 'custom',
+                          onSelected: (val) => setStateDialog(() => selectedRegion = 'custom'),
+                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Background Settings', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      title: const Text('Include Grid/Pattern'),
+                      value: includeGrid,
+                      activeColor: HydropTheme.of(context).primary,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setStateDialog(() => includeGrid = val),
+                    ),
+                    SwitchListTile(
+                      title: const Text('Transparent Background'),
+                      value: transparentBackground,
+                      activeColor: HydropTheme.of(context).primary,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setStateDialog(() => transparentBackground = val),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -678,9 +732,32 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                         SnackBar(content: Text('Exporting to $selectedFormat...')),
                       );
                       if (selectedFormat == 'png') {
-                        await ExportController.exportToImage(context, _canvasController.layersNotifier.value, fileName: fileName);
+                        await ExportController.exportToImage(
+                          context, 
+                          _canvasController.layersNotifier.value, 
+                          fileName: fileName,
+                          includeGrid: includeGrid,
+                          transparentBackground: transparentBackground,
+                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                        );
+                      } else if (selectedFormat == 'svg') {
+                        await ExportController.exportToSvg(
+                          context, 
+                          _canvasController.layersNotifier.value, 
+                          fileName: fileName,
+                          includeGrid: includeGrid,
+                          transparentBackground: transparentBackground,
+                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                        );
                       } else {
-                        await ExportController.exportToPdf(_canvasController.layersNotifier.value, canvasType: widget.note.canvasType, fileName: fileName);
+                        await ExportController.exportToPdf(
+                          _canvasController.layersNotifier.value, 
+                          canvasType: widget.note.canvasType, 
+                          fileName: fileName,
+                          includeGrid: includeGrid,
+                          transparentBackground: transparentBackground,
+                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                        );
                       }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -691,6 +768,8 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                       // Enter Export Frame Mode
                       _canvasController.pendingExportFormatNotifier.value = selectedFormat;
                       _canvasController.pendingExportNameNotifier.value = fileName;
+                      _canvasController.pendingExportIncludeGrid = includeGrid;
+                      _canvasController.pendingExportTransparentBackground = transparentBackground;
                       
                       // Calculate initial rect size in viewport center
                       final center = _transformationController.toScene(

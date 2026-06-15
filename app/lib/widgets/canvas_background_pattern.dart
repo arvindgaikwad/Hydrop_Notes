@@ -46,7 +46,7 @@ class CanvasBackgroundPattern extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget pattern = CustomPaint(
       size: Size.infinite,
-      painter: _CanvasBackgroundPainter(
+      painter: CanvasBackgroundPainter(
         variant: variant,
         size: size,
         fill: fill,
@@ -125,14 +125,14 @@ class CanvasBackgroundPattern extends StatelessWidget {
   }
 }
 
-class _CanvasBackgroundPainter extends CustomPainter {
+class CanvasBackgroundPainter extends CustomPainter {
   final CanvasBackgroundVariant variant;
   final double size;
   final Color fill;
   final TransformationController transform;
   final bool isLimitedBounds;
 
-  _CanvasBackgroundPainter({
+  CanvasBackgroundPainter({
     required this.variant,
     required this.size,
     required this.fill,
@@ -237,7 +237,7 @@ class _CanvasBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CanvasBackgroundPainter oldDelegate) {
+  bool shouldRepaint(covariant CanvasBackgroundPainter oldDelegate) {
     return oldDelegate.variant != variant ||
         oldDelegate.size != size ||
         oldDelegate.fill != fill ||

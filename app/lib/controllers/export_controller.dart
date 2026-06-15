@@ -1,11 +1,14 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:ui' as ui;
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/canvas_objects.dart';
+import '../widgets/canvas_background_pattern.dart';
 
 class ExportController {
   static Rect _calculateCanvasBounds(List<CanvasLayer> layers) {
@@ -37,7 +40,7 @@ class ExportController {
         if (node.position.dy + node.height > maxY) maxY = node.position.dy + node.height;
         hasContent = true;
       }
-      
+
       for (final node in layer.imageNodes) {
         if (node.position.dx < minX) minX = node.position.dx;
         if (node.position.dy < minY) minY = node.position.dy;
@@ -59,8 +62,25 @@ class ExportController {
       return const Rect.fromLTWH(0, 0, 1240, 1754);
     }
 
-    // Add some padding
     return Rect.fromLTRB(minX - 50, minY - 50, maxX + 50, maxY + 50);
+  }
+
+  static Future<void> _saveOrShare(Uint8List bytes, String fileName, String extension) async {
+    try {
+      if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        String? outputFile = await FilePicker.saveFile(
+          dialogTitle: 'Save Export',
+          fileName: '$fileName.$extension',
+        );
+        if (outputFile != null) {
+          await File(outputFile).writeAsBytes(bytes);
+        }
+      } else {
+        await Printing.sharePdf(bytes: bytes, filename: '$fileName.$extension');
+      }
+    } catch (_) {
+      await Printing.sharePdf(bytes: bytes, filename: '$fileName.$extension');
+    }
   }
 
   static Future<void> exportToPdf(
@@ -68,6 +88,9 @@ class ExportController {
     String canvasType = 'infinite',
     Rect? cropRect,
     String fileName = 'horizon_export',
+    bool includeGrid = false,
+    bool transparentBackground = false,
+    CanvasBackgroundVariant backgroundVariant = CanvasBackgroundVariant.none,
   }) async {
     final bounds = _calculateCanvasBounds(layers);
     final pdf = pw.Document();
@@ -78,7 +101,6 @@ class ExportController {
             ? PdfPageFormat.a4
             : PdfPageFormat(bounds.width, bounds.height));
 
-    // Preload images for PDF
     final pdfImages = <String, pw.MemoryImage>{};
     for (final layer in layers) {
       if (!layer.isVisible) continue;
@@ -100,16 +122,29 @@ class ExportController {
       pw.Page(
         pageFormat: pageFormat,
         build: (pw.Context context) {
-          final paintSize = cropRect != null 
-              ? PdfPoint(cropRect.width, cropRect.height) 
+          final paintSize = cropRect != null
+              ? PdfPoint(cropRect.width, cropRect.height)
               : PdfPoint(bounds.width, bounds.height);
-          final offset = cropRect != null 
-              ? Offset(-cropRect.left, -cropRect.top) 
+          final offset = cropRect != null
+              ? Offset(-cropRect.left, -cropRect.top)
               : Offset(-bounds.left, -bounds.top);
 
           final children = <pw.Widget>[];
 
-          // 1. Draw Images
+          if (!transparentBackground) {
+            children.add(
+              pw.Positioned(
+                left: 0,
+                top: 0,
+                child: pw.Container(
+                  width: paintSize.x,
+                  height: paintSize.y,
+                  color: PdfColors.white,
+                )
+              )
+            );
+          }
+
           for (final layer in layers) {
             if (!layer.isVisible) continue;
             for (final node in layer.imageNodes) {
@@ -117,8 +152,6 @@ class ExportController {
                  children.add(
                    pw.Positioned(
                      left: node.position.dx + offset.dx,
-                     // PDF coordinate system originates from bottom-left, but pw.Positioned 
-                     // in a pw.Stack correctly maps `top` from the top-left of the Stack.
                      top: node.position.dy + offset.dy,
                      child: pw.Transform(
                        transform: Matrix4.identity()
@@ -139,7 +172,6 @@ class ExportController {
             }
           }
 
-          // 2. Draw Strokes
           children.add(
             pw.Positioned(
               left: 0,
@@ -166,7 +198,7 @@ class ExportController {
     );
 
     final bytes = await pdf.save();
-    await Printing.sharePdf(bytes: bytes, filename: '$fileName.pdf');
+    await _saveOrShare(bytes, fileName, 'pdf');
   }
 
   static Future<void> exportToImage(
@@ -174,26 +206,45 @@ class ExportController {
     List<CanvasLayer> layers, {
     Rect? cropRect,
     String fileName = 'horizon_export',
+    bool includeGrid = false,
+    bool transparentBackground = false,
+    CanvasBackgroundVariant backgroundVariant = CanvasBackgroundVariant.none,
   }) async {
     final bounds = _calculateCanvasBounds(layers);
     final format = cropRect ?? bounds;
-    
+
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, format.width, format.height));
-    
-    // Draw background
-    canvas.drawRect(Rect.fromLTWH(0, 0, format.width, format.height), Paint()..color = Colors.white);
-    
+
+    if (!transparentBackground) {
+      canvas.drawRect(Rect.fromLTWH(0, 0, format.width, format.height), Paint()..color = Colors.white);
+    }
+
+    if (includeGrid && backgroundVariant != CanvasBackgroundVariant.none) {
+      final transform = TransformationController();
+      transform.value.translate(
+        (cropRect != null) ? -cropRect.left : -bounds.left,
+        (cropRect != null) ? -cropRect.top : -bounds.top,
+      );
+      final painter = CanvasBackgroundPainter(
+        variant: backgroundVariant,
+        size: 40.0,
+        fill: const Color(0xFF252525).withValues(alpha: 0.1),
+        transform: transform,
+        isLimitedBounds: false,
+      );
+      painter.paint(canvas, Size(format.width, format.height));
+    }
+
     if (cropRect != null) {
       canvas.translate(-cropRect.left, -cropRect.top);
     } else {
       canvas.translate(-bounds.left, -bounds.top);
     }
-    
+
     for (final layer in layers) {
       if (!layer.isVisible) continue;
 
-      // Draw Images
       for (final imageNode in layer.imageNodes) {
         if (imageNode.filePath.isEmpty) continue;
         try {
@@ -203,20 +254,20 @@ class ExportController {
             final codec = await ui.instantiateImageCodec(bytes);
             final frameInfo = await codec.getNextFrame();
             final image = frameInfo.image;
-            
+
             canvas.save();
             canvas.translate(imageNode.position.dx + imageNode.width / 2, imageNode.position.dy + imageNode.height / 2);
             canvas.rotate(imageNode.rotation);
             canvas.scale(imageNode.scale);
             canvas.translate(-imageNode.width / 2, -imageNode.height / 2);
-            
+
             paintImage(
               canvas: canvas,
               rect: Rect.fromLTWH(0, 0, imageNode.width, imageNode.height),
               image: image,
               fit: BoxFit.fill,
             );
-            
+
             canvas.restore();
           }
         } catch (e) {
@@ -226,30 +277,105 @@ class ExportController {
 
       for (final stroke in layer.strokes) {
         if (stroke.points.isEmpty) continue;
-        
+
         final paint = Paint()
           ..color = stroke.color
           ..style = PaintingStyle.fill;
-          
+
         if (stroke.isPixelEraser) {
           paint.blendMode = BlendMode.clear;
         } else if (stroke.isTape) {
           paint.color = stroke.color.withValues(alpha: stroke.isTapeRevealed ? 0.2 : 0.95);
         }
-        
+
         canvas.drawPath(stroke.path, paint);
       }
     }
-    
+
     final picture = recorder.endRecording();
     final img = await picture.toImage(format.width.toInt(), format.height.toInt());
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
     final bytes = byteData?.buffer.asUint8List();
-    
+
     if (bytes != null) {
-      // Using Printing.sharePdf to share the image bytes, it supports general sharing
-      await Printing.sharePdf(bytes: bytes, filename: '$fileName.png');
+      await _saveOrShare(bytes, fileName, 'png');
     }
+  }
+
+  static Future<void> exportToSvg(
+    BuildContext context,
+    List<CanvasLayer> layers, {
+    Rect? cropRect,
+    String fileName = 'horizon_export',
+    bool includeGrid = false,
+    bool transparentBackground = false,
+    CanvasBackgroundVariant backgroundVariant = CanvasBackgroundVariant.none,
+  }) async {
+    final bounds = _calculateCanvasBounds(layers);
+    final format = cropRect ?? bounds;
+
+    final StringBuffer sb = StringBuffer();
+    sb.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
+    sb.writeln('<svg width="${format.width}" height="${format.height}" viewBox="0 0 ${format.width} ${format.height}" xmlns="http://www.w3.org/2000/svg">');
+
+    if (!transparentBackground) {
+      sb.writeln('  <rect width="100%" height="100%" fill="white" />');
+    }
+
+    final double offsetX = (cropRect != null) ? -cropRect.left : -bounds.left;
+    final double offsetY = (cropRect != null) ? -cropRect.top : -bounds.top;
+
+    if (includeGrid && backgroundVariant == CanvasBackgroundVariant.grid) {
+       sb.writeln('''
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#252525" stroke-opacity="0.1" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#grid)" />
+       ''');
+    } else if (includeGrid && backgroundVariant == CanvasBackgroundVariant.dots) {
+       sb.writeln('''
+  <defs>
+    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
+      <circle cx="2" cy="2" r="2" fill="#252525" fill-opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#dots)" />
+       ''');
+    }
+
+    sb.writeln('  <g transform="translate($offsetX, $offsetY)">');
+
+    for (final layer in layers) {
+      if (!layer.isVisible) continue;
+
+      for (final stroke in layer.strokes) {
+        if (stroke.points.isEmpty) continue;
+        if (stroke.isPixelEraser) continue;
+
+        final color = stroke.color;
+        final alpha = stroke.isTape ? (stroke.isTapeRevealed ? 0.2 : 0.95) : (color.a / 255.0);
+        final colorHex = '#${color.r.toInt().toRadixString(16).padLeft(2, '0')}${color.g.toInt().toRadixString(16).padLeft(2, '0')}${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
+
+        sb.write('    <path d="');
+        for (int i=0; i<stroke.points.length; i++) {
+          final p = stroke.points[i];
+          if (i == 0) {
+            sb.write('M ${p.point.dx} ${p.point.dy} ');
+          } else {
+            sb.write('L ${p.point.dx} ${p.point.dy} ');
+          }
+        }
+        sb.writeln('" fill="none" stroke="$colorHex" stroke-opacity="$alpha" stroke-width="${stroke.baseWidth}" stroke-linecap="round" stroke-linejoin="round"/>');
+      }
+    }
+
+    sb.writeln('  </g>');
+    sb.writeln('</svg>');
+
+    final bytes = Uint8List.fromList(sb.toString().codeUnits);
+    await _saveOrShare(bytes, fileName, 'svg');
   }
 }
 
@@ -281,7 +407,6 @@ void _paintPdfCanvas(
       canvas.setFillColor(color);
 
       if (stroke.isInkPen) {
-        // Draw variable width
         for (int i = 0; i < stroke.points.length - 1; i++) {
           final p1 = stroke.points[i];
           final p2 = stroke.points[i + 1];
@@ -295,25 +420,23 @@ void _paintPdfCanvas(
 
           canvas.drawEllipse(dx1, dy1, w1, w1);
           canvas.drawEllipse(dx2, dy2, w2, w2);
-          // Connect them
           canvas.setStrokeColor(color);
           canvas.setLineWidth(w1);
           canvas.drawLine(dx1, dy1, dx2, dy2);
           canvas.strokePath();
         }
       } else {
-        // Draw constant width
         canvas.setStrokeColor(color);
         canvas.setLineWidth(stroke.baseWidth);
         for (int i = 0; i < stroke.points.length - 1; i++) {
           final p1 = stroke.points[i];
           final p2 = stroke.points[i + 1];
-          
+
           final dx1 = p1.point.dx + offset.dx;
           final dy1 = size.y - (p1.point.dy + offset.dy);
           final dx2 = p2.point.dx + offset.dx;
           final dy2 = size.y - (p2.point.dy + offset.dy);
-          
+
           canvas.drawLine(dx1, dy1, dx2, dy2);
           canvas.strokePath();
         }
