@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../controllers/canvas_controller.dart';
 import 'color_picker.dart';
 import '../theme/hydrop_theme.dart';
-import 'export_dialog.dart';
 
 class DrawingToolbar extends StatefulWidget {
   final CanvasController controller;
@@ -141,20 +140,6 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
         icon: const Icon(Icons.redo),
         color: c.redoStack.isNotEmpty ? ht.iconActive : ht.textDisabled,
         onPressed: c.redoStack.isNotEmpty ? c.redo : null,
-      ),
-      IconButton(
-        icon: const Icon(Icons.ios_share),
-        color: ht.iconDefault,
-        tooltip: 'Export Note',
-        onPressed: () {
-          // Temporarily show the floating modal variant by default.
-          // You can change `isSidePanel: true` to test the side panel variant.
-          showDialog(
-            context: context,
-            barrierColor: Colors.black.withOpacity(0.5),
-            builder: (_) => const ExportOptionsPanel(isSidePanel: false),
-          );
-        },
       ),
       _divider(ht),
 
