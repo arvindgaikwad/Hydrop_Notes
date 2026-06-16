@@ -12,8 +12,8 @@
 
 - [x] **📁 Directory Restructuring:** Clean up root folder, relocate logs, history, and handoff documentation to dedicated subfolders.
 - [x] **🗺️ Roadmap Synchronization:** Update [VISUAL_ROADMAP.md](file:///c:/Users/Silver/Downloads/silver-os/50_IDEAS/Apps/Horizon_Notes/VISUAL_ROADMAP.md) with recent implementations (Undo/Redo stack, soft-delete, and rename systems) and correct relative paths.
-- [ ] **💻 Desktop Layout & UI Polish:** Optimize toolbars, keyboard shortcuts, and mouse/trackpad interactions for desktop screens.
-- [ ] **🌐 Web Build Validation:** Ensure the Canvas Engine and Neo-Skeuomorphic components render correctly on Web.
+- [x] **💻 Desktop Layout & UI Polish:** Optimize toolbars, keyboard shortcuts, and mouse/trackpad interactions for desktop screens.
+- [x] **🌐 Web Build Validation:** Ensure the Canvas Engine and Neo-Skeuomorphic components render correctly on Web.
 - [ ] **📱 Mobile Layout & Responsive Check:** (Deferred) Run the app on mobile simulators/devices.
 
 ---
@@ -33,12 +33,12 @@
 - [ ] **Sync Engine:** Multiplayer sync using zero-server architecture (syncing direct to user's Google Drive or OneDrive).
 - [ ] **AI Integration:** Local AI (Ollama) integration for smart connections and note synthesis.
 - [ ] **3D Extrusion:** Pseudo 3D Extrusion (Phase 2 Canvas depth and camera tilt).
-- [ ] **SVG Support:** High-fidelity vector SVG path export capabilities.
+- [x] **SVG Support:** High-fidelity vector SVG path export capabilities.
 
 ### Monetization & User Experience
 - [ ] **AdMob Integration:** AdMob banner/interstitial setup and rewarded video pass system.
 - [ ] **Onboarding Flow:** 3-screen animated skeuomorphic onboarding flow.
-- [ ] **Export Options Panel:** Export configuration UI for PDF, PNG, and SVG vector options.
+- [x] **Export Options Panel:** Export configuration UI for PDF, PNG, and SVG vector options.
 
 ---
 
