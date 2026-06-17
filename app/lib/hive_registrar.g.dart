@@ -3,9 +3,9 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
-import 'package:app/models/canvas_objects.dart';
-import 'package:app/models/stroke.dart';
-import 'package:app/models/workspace.dart';
+import 'package:hydrop_notes/models/canvas_objects.dart';
+import 'package:hydrop_notes/models/stroke.dart';
+import 'package:hydrop_notes/models/workspace.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {

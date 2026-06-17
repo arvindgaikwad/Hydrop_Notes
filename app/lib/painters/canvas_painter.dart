@@ -34,8 +34,8 @@ class CombinedCanvasPainter extends CustomPainter {
   CombinedCanvasPainter({
     required this.strokes,
     this.activeStrokeNotifier,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -78,8 +78,8 @@ class SelectionDragPainter extends CustomPainter {
     required this.pendingRotation,
     required this.transformCenter,
     this.activeStrokeNotifier,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

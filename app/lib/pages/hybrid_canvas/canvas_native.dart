@@ -334,7 +334,9 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                   final translationDelta = Offset(-signal.scrollDelta.dx, -signal.scrollDelta.dy);
 
                   // Apply translation but keep scale
-                  final nextMatrix = currentMatrix.clone()..leftTranslate(translationDelta.dx, translationDelta.dy);
+                  final nextMatrix = currentMatrix.clone();
+                  final scale = nextMatrix.getMaxScaleOnAxis();
+                  nextMatrix.translateByDouble(translationDelta.dx / scale, translationDelta.dy / scale, 0.0, 1.0);
                   controller.value = nextMatrix;
                 }
               }
@@ -989,8 +991,8 @@ class MarqueeSelectionPainter extends CustomPainter {
     required this.canvasController,
     required this.activeTool,
     required this.color,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

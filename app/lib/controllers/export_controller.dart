@@ -228,8 +228,8 @@ class ExportController {
         if (textNode.text.isEmpty) continue;
 
         final color = textNode.color;
-        final hexColor = '#${color.r.toInt().toRadixString(16).padLeft(2, '0')}${color.g.toInt().toRadixString(16).padLeft(2, '0')}${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
-        final opacity = color.a / 255.0;
+        final hexColor = '#${(color.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.b * 255).toInt().toRadixString(16).padLeft(2, '0')}';
+        final opacity = color.a;
 
         String textAnchor = "start";
         double xOffset = 0;
@@ -304,8 +304,8 @@ class ExportController {
         if (stroke.points.isEmpty || stroke.isPixelEraser || stroke.color == Colors.transparent) continue;
 
         final color = stroke.color;
-        final hexColor = '#${color.r.toInt().toRadixString(16).padLeft(2, '0')}${color.g.toInt().toRadixString(16).padLeft(2, '0')}${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
-        final opacity = stroke.isTape ? (stroke.isTapeRevealed ? 0.2 : 0.95) : color.a / 255.0;
+        final hexColor = '#${(color.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.b * 255).toInt().toRadixString(16).padLeft(2, '0')}';
+        final opacity = stroke.isTape ? (stroke.isTapeRevealed ? 0.2 : 0.95) : color.a;
 
         if (stroke.isInkPen) {
           final outline = stroke.outlinePolygon;
@@ -449,10 +449,10 @@ void _paintPdfCanvas(
       }
 
       final color = PdfColor(
-        stroke.color.r / 255,
-        stroke.color.g / 255,
-        stroke.color.b / 255,
-        stroke.color.a / 255,
+        stroke.color.r,
+        stroke.color.g,
+        stroke.color.b,
+        stroke.color.a,
       );
 
       canvas.setFillColor(color);

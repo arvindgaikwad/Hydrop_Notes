@@ -57,8 +57,8 @@ class _ExportOptionsPanelState extends State<ExportOptionsPanel> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: ht.primary,
-            activeTrackColor: ht.primary.withOpacity(0.3),
+            activeThumbColor: ht.primary,
+            activeTrackColor: ht.primary.withValues(alpha: 0.3),
             inactiveThumbColor: ht.background,
             inactiveTrackColor: ht.divider,
           ),
