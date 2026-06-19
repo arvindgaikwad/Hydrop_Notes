@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import '../../controllers/canvas_controller.dart';
 import '../../painters/canvas_painter.dart';
@@ -312,19 +313,32 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
             onPointerSignal: (signal) {
               if (signal is PointerScrollEvent) {
                 final controller = widget.transformationController;
-                final zoomDelta = signal.scrollDelta.dy > 0 ? 0.9 : 1.1;
-                final RenderBox renderBox =
-                    context.findRenderObject() as RenderBox;
-                final Offset localPosition = renderBox.globalToLocal(
-                  signal.position,
-                );
 
-                widget.canvasController.handleZoom(
-                  localPosition,
-                  zoomDelta,
-                  controller,
-                  widget.canvasType,
-                );
+                // Trackpad pan vs Mouse Wheel zoom based on HardwareKeyboard control/cmd keys
+                if (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed) {
+                  // Zooming via keyboard shortcut + scroll
+                  final zoomDelta = signal.scrollDelta.dy > 0 ? 0.9 : 1.1;
+                  final RenderBox renderBox = context.findRenderObject() as RenderBox;
+                  final Offset localPosition = renderBox.globalToLocal(signal.position);
+
+                  widget.canvasController.handleZoom(
+                    localPosition,
+                    zoomDelta,
+                    controller,
+                    widget.canvasType,
+                  );
+                } else {
+                  // Panning via mouse wheel or trackpad
+                  final currentMatrix = controller.value;
+                  // The delta is inverted for translation
+                  final translationDelta = Offset(-signal.scrollDelta.dx, -signal.scrollDelta.dy);
+
+                  // Apply translation but keep scale
+                  final nextMatrix = currentMatrix.clone();
+                  final scale = nextMatrix.getMaxScaleOnAxis();
+                  nextMatrix.translateByDouble(translationDelta.dx / scale, translationDelta.dy / scale, 0.0, 1.0);
+                  controller.value = nextMatrix;
+                }
               }
             },
             child: GestureDetector(
@@ -977,8 +991,8 @@ class MarqueeSelectionPainter extends CustomPainter {
     required this.canvasController,
     required this.activeTool,
     required this.color,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

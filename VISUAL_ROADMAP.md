@@ -88,7 +88,7 @@ graph TD
     
     %% Bugs
     subgraph Issues["🪲 Known Issues"]
-        AXSpam["ui::AXTree Windows Console Spam<br>(Harmless Flutter Engine Bug)"]:::built
+        AXSpam["ui::AXTree Windows Console Spam<br>(Harmless Flutter Engine Bug)"]:::bug
     end
 
     Core -.-> Roadmap

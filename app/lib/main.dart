@@ -9,20 +9,9 @@ import 'models/adapters.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'theme/hydrop_theme.dart';
 import 'theme/theme_controller.dart';
-import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Filter out harmless Windows AXTree console spam
-  final originalDebugPrint = debugPrint;
-  debugPrint = (String? message, {int? wrapWidth}) {
-    if (message != null && message.contains('Failed to update ui::AXTree')) {
-      return;
-    }
-    originalDebugPrint(message, wrapWidth: wrapWidth);
-  };
-
   await Hive.initFlutter('Hydrop');
 
   Hive.registerAdapter(OffsetAdapter());

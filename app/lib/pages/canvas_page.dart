@@ -11,6 +11,7 @@ import '../widgets/minimap.dart';
 import '../widgets/canvas_background_pattern.dart';
 import '../theme/hydrop_theme.dart';
 
+import 'package:flutter/services.dart';
 import '../models/workspace.dart';
 import '../models/canvas_objects.dart';
 
@@ -125,21 +126,6 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
     );
   }
 
-  @override
-  void dispose() {
-    // Save undo/redo stacks to the transient note document
-    widget.note.undoStack = List.from(_canvasController.undoStack);
-    widget.note.redoStack = List.from(_canvasController.redoStack);
-
-    _transformationController.dispose();
-    _cameraAnimationController.dispose();
-    _canvasController.layersNotifier.dispose();
-    _canvasController.activeLayerIndexNotifier.dispose();
-    _canvasController.activeStrokeNotifier.dispose();
-    _canvasController.selectionNotifier.dispose();
-    super.dispose();
-  }
-
   void _animateToScene(CanvasScene scene) {
     final targetMatrix = Matrix4.identity()
       ..leftTranslate(scene.x, scene.y)
@@ -165,11 +151,80 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
     }
   }
 
+  final FocusNode _keyboardFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _keyboardFocusNode.dispose();
+    // Save undo/redo stacks to the transient note document
+    widget.note.undoStack = List.from(_canvasController.undoStack);
+    widget.note.redoStack = List.from(_canvasController.redoStack);
+
+    _transformationController.dispose();
+    _cameraAnimationController.dispose();
+    _canvasController.layersNotifier.dispose();
+    _canvasController.activeLayerIndexNotifier.dispose();
+    _canvasController.activeStrokeNotifier.dispose();
+    _canvasController.selectionNotifier.dispose();
+    super.dispose();
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed) {
+        if (event.logicalKey == LogicalKeyboardKey.keyZ) {
+          if (HardwareKeyboard.instance.isShiftPressed) {
+            _canvasController.redo();
+          } else {
+            _canvasController.undo();
+          }
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      }
+
+      // If a text field or another focus node has primary focus, don't steal keys like "b", "e", "delete" etc.
+      if (!node.hasPrimaryFocus) {
+        return KeyEventResult.ignored;
+      }
+
+      switch (event.logicalKey) {
+        case LogicalKeyboardKey.keyB:
+          _canvasController.setTool(DrawingTool.inkPen);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyE:
+          _canvasController.setTool(DrawingTool.pixelEraser);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyV:
+          _canvasController.setTool(DrawingTool.select);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyL:
+          _canvasController.setTool(DrawingTool.lasso);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyT:
+          _canvasController.setTool(DrawingTool.text);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyP:
+          _canvasController.setTool(DrawingTool.pan);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.backspace:
+        case LogicalKeyboardKey.delete:
+          _canvasController.deleteSelection();
+          return KeyEventResult.handled;
+      }
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _canvasController,
-      builder: (context, _) {
+    return Focus(
+      focusNode: _keyboardFocusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: ListenableBuilder(
+        listenable: _canvasController,
+        builder: (context, _) {
         final isDrawing = _canvasController.currentTool != DrawingTool.pan;
         return Container(
           color: Colors.transparent,
@@ -597,6 +652,7 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
           ),
         );
       },
+      ),
     );
   }
 

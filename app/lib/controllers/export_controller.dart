@@ -9,6 +9,8 @@ import 'package:printing/printing.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/canvas_objects.dart';
 import '../widgets/canvas_background_pattern.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
 class ExportController {
   static Rect _calculateCanvasBounds(List<CanvasLayer> layers) {
@@ -201,6 +203,211 @@ class ExportController {
     await _saveOrShare(bytes, fileName, 'pdf');
   }
 
+  static Future<void> exportToSvg(
+    BuildContext context,
+    List<CanvasLayer> layers, {
+    Rect? cropRect,
+    String fileName = 'horizon_export',
+    bool includeGrid = false,
+    bool transparentBackground = false,
+    CanvasBackgroundVariant backgroundVariant = CanvasBackgroundVariant.none,
+  }) async {
+    final bounds = _calculateCanvasBounds(layers);
+    final format = cropRect ?? bounds;
+
+    final sb = StringBuffer();
+    sb.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
+    sb.writeln('<svg width="${format.width}" height="${format.height}" viewBox="0 0 ${format.width} ${format.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">');
+    
+    if (!transparentBackground) {
+      sb.writeln('  <rect width="100%" height="100%" fill="white" />');
+    }
+
+    final double offsetX = (cropRect != null) ? -cropRect.left : -bounds.left;
+    final double offsetY = (cropRect != null) ? -cropRect.top : -bounds.top;
+
+    if (includeGrid && backgroundVariant == CanvasBackgroundVariant.grid) {
+       sb.writeln('''
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#252525" stroke-opacity="0.1" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#grid)" />
+       ''');
+    } else if (includeGrid && backgroundVariant == CanvasBackgroundVariant.dots) {
+       sb.writeln('''
+  <defs>
+    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
+      <circle cx="2" cy="2" r="2" fill="#252525" fill-opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#dots)" />
+       ''');
+    }
+
+    sb.writeln('<g transform="translate(${-format.left}, ${-format.top})">');
+
+    for (final layer in layers) {
+      if (!layer.isVisible) continue;
+
+      // Image Nodes
+      for (final imageNode in layer.imageNodes) {
+        if (imageNode.filePath.isEmpty) continue;
+        try {
+          final file = File(imageNode.filePath);
+          if (file.existsSync()) {
+            final bytes = await file.readAsBytes();
+            final base64String = base64Encode(bytes);
+
+            // Determine mime type from file extension
+            String mimeType = 'image/png';
+            if (imageNode.filePath.toLowerCase().endsWith('.jpg') || imageNode.filePath.toLowerCase().endsWith('.jpeg')) {
+              mimeType = 'image/jpeg';
+            } else if (imageNode.filePath.toLowerCase().endsWith('.webp')) {
+              mimeType = 'image/webp';
+            }
+
+            final dataUri = 'data:$mimeType;base64,$base64String';
+
+            final cx = imageNode.position.dx + imageNode.width / 2;
+            final cy = imageNode.position.dy + imageNode.height / 2;
+
+            // SVG transform takes degrees for rotation
+            final rotationDeg = imageNode.rotation * 180 / 3.141592653589793;
+
+            sb.write('<g transform="translate($cx $cy) rotate($rotationDeg) scale(${imageNode.scale}) translate(${-imageNode.width/2} ${-imageNode.height/2})">\n');
+            sb.write('  <image width="${imageNode.width}" height="${imageNode.height}" preserveAspectRatio="none" xlink:href="$dataUri"/>\n');
+            sb.write('</g>\n');
+          }
+        } catch (e) {
+          debugPrint("Failed to encode SVG image node: $e");
+        }
+      }
+
+      // Text Nodes
+      for (final textNode in layer.textNodes) {
+        if (textNode.text.isEmpty) continue;
+
+        final color = textNode.color;
+        final hexColor = '#${(color.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.b * 255).toInt().toRadixString(16).padLeft(2, '0')}';
+        final opacity = color.a;
+
+        String textAnchor = "start";
+        double xOffset = 0;
+        if (textNode.alignmentIndex == 1) {
+          textAnchor = "middle";
+          xOffset = textNode.width / 2;
+        } else if (textNode.alignmentIndex == 2) {
+          textAnchor = "end";
+          xOffset = textNode.width;
+        }
+
+        String fontWeight = textNode.isBold ? "bold" : "normal";
+        String fontStyle = textNode.isItalic ? "italic" : "normal";
+        String textDecoration = textNode.isUnderline ? "underline" : "none";
+
+        final cx = textNode.position.dx + textNode.width / 2;
+        final cy = textNode.position.dy + textNode.height / 2;
+        final rotationDeg = textNode.rotation * 180 / 3.141592653589793;
+
+        // Escape XML entities
+        final escapedText = textNode.text
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&apos;');
+
+        sb.write('<g transform="translate($cx $cy) rotate($rotationDeg) scale(${textNode.scale}) translate(${-textNode.width/2} ${-textNode.height/2})">\n');
+
+        // Very basic multi-line handling by splitting on \n
+        final lines = escapedText.split('\n');
+        for (int i = 0; i < lines.length; i++) {
+          final dy = (i + 1) * textNode.fontSize * 1.2; // roughly line-height
+          sb.write('  <text x="$xOffset" y="$dy" font-family="Delicious Handrawn, sans-serif" font-size="${textNode.fontSize}" font-weight="$fontWeight" font-style="$fontStyle" text-decoration="$textDecoration" fill="$hexColor" fill-opacity="$opacity" text-anchor="$textAnchor">${lines[i]}</text>\n');
+        }
+
+        sb.write('</g>\n');
+      }
+
+      // Document Nodes
+      for (final docNode in layer.documentNodes) {
+        final cx = docNode.position.dx + docNode.width / 2;
+        final cy = docNode.position.dy + docNode.height / 2;
+        final rotationDeg = docNode.rotation * 180 / 3.141592653589793;
+
+        sb.write('<g transform="translate($cx $cy) rotate($rotationDeg) scale(${docNode.scale}) translate(${-docNode.width/2} ${-docNode.height/2})">\n');
+
+        // Draw the document node background / box
+        sb.write('  <rect x="0" y="0" width="${docNode.width}" height="${docNode.height}" rx="12" ry="12" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>\n');
+
+        if (docNode.text.isNotEmpty) {
+          final escapedText = docNode.text
+              .replaceAll('&', '&amp;')
+              .replaceAll('<', '&lt;')
+              .replaceAll('>', '&gt;')
+              .replaceAll('"', '&quot;')
+              .replaceAll("'", '&apos;');
+
+          final lines = escapedText.split('\n');
+          for (int i = 0; i < lines.length; i++) {
+             // 16px font, start at y=12+16=28
+             final dy = 28 + (i * 16 * 1.5);
+             sb.write('  <text x="16" y="$dy" font-family="Inter, sans-serif" font-size="16" fill="#000000">${lines[i]}</text>\n');
+          }
+        }
+
+        sb.write('</g>\n');
+      }
+
+      // Strokes (Pens, Highlights)
+      for (final stroke in layer.strokes) {
+        if (stroke.points.isEmpty || stroke.isPixelEraser || stroke.color == Colors.transparent) continue;
+
+        final color = stroke.color;
+        final hexColor = '#${(color.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.b * 255).toInt().toRadixString(16).padLeft(2, '0')}';
+        final opacity = stroke.isTape ? (stroke.isTapeRevealed ? 0.2 : 0.95) : color.a;
+
+        if (stroke.isInkPen) {
+          final outline = stroke.outlinePolygon;
+          if (outline.isEmpty) continue;
+
+          sb.write('<path d="');
+          sb.write('M ${outline.first.dx} ${outline.first.dy} ');
+          for (int i = 1; i < outline.length; i++) {
+            sb.write('L ${outline[i].dx} ${outline[i].dy} ');
+          }
+          sb.write('Z" fill="$hexColor" fill-opacity="$opacity" />\n');
+        } else {
+          final pathPoints = stroke.points;
+          if (pathPoints.length < 2) continue;
+
+          sb.write('<path d="');
+          sb.write('M ${pathPoints.first.point.dx} ${pathPoints.first.point.dy} ');
+          if (pathPoints.length == 2) {
+            sb.write('L ${pathPoints[1].point.dx} ${pathPoints[1].point.dy} ');
+          } else {
+            for (int i = 1; i < pathPoints.length - 1; i++) {
+              final p0 = pathPoints[i].point;
+              final p1 = pathPoints[i + 1].point;
+              final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+              sb.write('Q ${p0.dx} ${p0.dy} ${mid.dx} ${mid.dy} ');
+            }
+            sb.write('L ${pathPoints.last.point.dx} ${pathPoints.last.point.dy} ');
+          }
+          sb.write('" fill="none" stroke="$hexColor" stroke-width="${stroke.baseWidth}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="$opacity" />\n');
+        }
+      }
+    }
+
+    sb.writeln('</g>');
+    sb.writeln('</svg>');
+
+    final bytes = Uint8List.fromList(utf8.encode(sb.toString()));
+    await Printing.sharePdf(bytes: bytes, filename: '$fileName.svg');
+  }
+
   static Future<void> exportToImage(
     BuildContext context,
     List<CanvasLayer> layers, {
@@ -302,81 +509,7 @@ class ExportController {
     }
   }
 
-  static Future<void> exportToSvg(
-    BuildContext context,
-    List<CanvasLayer> layers, {
-    Rect? cropRect,
-    String fileName = 'horizon_export',
-    bool includeGrid = false,
-    bool transparentBackground = false,
-    CanvasBackgroundVariant backgroundVariant = CanvasBackgroundVariant.none,
-  }) async {
-    final bounds = _calculateCanvasBounds(layers);
-    final format = cropRect ?? bounds;
 
-    final StringBuffer sb = StringBuffer();
-    sb.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
-    sb.writeln('<svg width="${format.width}" height="${format.height}" viewBox="0 0 ${format.width} ${format.height}" xmlns="http://www.w3.org/2000/svg">');
-
-    if (!transparentBackground) {
-      sb.writeln('  <rect width="100%" height="100%" fill="white" />');
-    }
-
-    final double offsetX = (cropRect != null) ? -cropRect.left : -bounds.left;
-    final double offsetY = (cropRect != null) ? -cropRect.top : -bounds.top;
-
-    if (includeGrid && backgroundVariant == CanvasBackgroundVariant.grid) {
-       sb.writeln('''
-  <defs>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#252525" stroke-opacity="0.1" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#grid)" />
-       ''');
-    } else if (includeGrid && backgroundVariant == CanvasBackgroundVariant.dots) {
-       sb.writeln('''
-  <defs>
-    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="translate($offsetX, $offsetY)">
-      <circle cx="2" cy="2" r="2" fill="#252525" fill-opacity="0.2"/>
-    </pattern>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#dots)" />
-       ''');
-    }
-
-    sb.writeln('  <g transform="translate($offsetX, $offsetY)">');
-
-    for (final layer in layers) {
-      if (!layer.isVisible) continue;
-
-      for (final stroke in layer.strokes) {
-        if (stroke.points.isEmpty) continue;
-        if (stroke.isPixelEraser) continue;
-
-        final color = stroke.color;
-        final alpha = stroke.isTape ? (stroke.isTapeRevealed ? 0.2 : 0.95) : (color.a / 255.0);
-        final colorHex = '#${color.r.toInt().toRadixString(16).padLeft(2, '0')}${color.g.toInt().toRadixString(16).padLeft(2, '0')}${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
-
-        sb.write('    <path d="');
-        for (int i=0; i<stroke.points.length; i++) {
-          final p = stroke.points[i];
-          if (i == 0) {
-            sb.write('M ${p.point.dx} ${p.point.dy} ');
-          } else {
-            sb.write('L ${p.point.dx} ${p.point.dy} ');
-          }
-        }
-        sb.writeln('" fill="none" stroke="$colorHex" stroke-opacity="$alpha" stroke-width="${stroke.baseWidth}" stroke-linecap="round" stroke-linejoin="round"/>');
-      }
-    }
-
-    sb.writeln('  </g>');
-    sb.writeln('</svg>');
-
-    final bytes = Uint8List.fromList(sb.toString().codeUnits);
-    await _saveOrShare(bytes, fileName, 'svg');
-  }
 }
 
 void _paintPdfCanvas(
@@ -398,10 +531,10 @@ void _paintPdfCanvas(
       }
 
       final color = PdfColor(
-        stroke.color.r / 255,
-        stroke.color.g / 255,
-        stroke.color.b / 255,
-        stroke.color.a / 255,
+        stroke.color.r,
+        stroke.color.g,
+        stroke.color.b,
+        stroke.color.a,
       );
 
       canvas.setFillColor(color);
