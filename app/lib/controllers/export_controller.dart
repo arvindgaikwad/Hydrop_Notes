@@ -10,7 +10,6 @@ import 'package:file_picker/file_picker.dart';
 import '../models/canvas_objects.dart';
 import '../widgets/canvas_background_pattern.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 
 class ExportController {
   static Rect _calculateCanvasBounds(List<CanvasLayer> layers) {
