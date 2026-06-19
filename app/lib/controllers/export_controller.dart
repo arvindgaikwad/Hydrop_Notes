@@ -451,6 +451,8 @@ class ExportController {
     for (final layer in layers) {
       if (!layer.isVisible) continue;
 
+      canvas.saveLayer(null, Paint());
+
       for (final imageNode in layer.imageNodes) {
         if (imageNode.filePath.isEmpty) continue;
         try {
@@ -496,6 +498,8 @@ class ExportController {
 
         canvas.drawPath(stroke.path, paint);
       }
+
+      canvas.restore();
     }
 
     final picture = recorder.endRecording();
@@ -539,42 +543,30 @@ void _paintPdfCanvas(
       canvas.setFillColor(color);
 
       if (stroke.isInkPen) {
-        for (int i = 0; i < stroke.points.length - 1; i++) {
-          final p1 = stroke.points[i];
-          final p2 = stroke.points[i + 1];
-          final w1 = stroke.baseWidth * p1.pressure;
-          final w2 = stroke.baseWidth * p2.pressure;
-
-          final dx1 = p1.point.dx + offset.dx;
-          final dy1 = size.y - (p1.point.dy + offset.dy);
-          final dx2 = p2.point.dx + offset.dx;
-          final dy2 = size.y - (p2.point.dy + offset.dy);
-
-          canvas.drawEllipse(dx1, dy1, w1, w1);
-          canvas.drawEllipse(dx2, dy2, w2, w2);
-          canvas.setStrokeColor(color);
-          canvas.setLineWidth(w1);
-          canvas.drawLine(dx1, dy1, dx2, dy2);
-          canvas.strokePath();
+        final outline = stroke.outlinePolygon;
+        if (outline.isNotEmpty) {
+          final start = outline.first;
+          canvas.moveTo(start.dx + offset.dx, size.y - (start.dy + offset.dy));
+          for (int i = 1; i < outline.length; i++) {
+            final pt = outline[i];
+            canvas.lineTo(pt.dx + offset.dx, size.y - (pt.dy + offset.dy));
+          }
+          canvas.fillPath();
         }
       } else {
         canvas.setStrokeColor(color);
         canvas.setLineWidth(stroke.baseWidth);
-        for (int i = 0; i < stroke.points.length - 1; i++) {
-          final p1 = stroke.points[i];
-          final p2 = stroke.points[i + 1];
-
-          final dx1 = p1.point.dx + offset.dx;
-          final dy1 = size.y - (p1.point.dy + offset.dy);
-          final dx2 = p2.point.dx + offset.dx;
-          final dy2 = size.y - (p2.point.dy + offset.dy);
-
-          canvas.drawLine(dx1, dy1, dx2, dy2);
+        final pathPoints = stroke.points;
+        if (pathPoints.length >= 2) {
+          final start = pathPoints.first.point;
+          canvas.moveTo(start.dx + offset.dx, size.y - (start.dy + offset.dy));
+          for (int i = 1; i < pathPoints.length; i++) {
+            final pt = pathPoints[i].point;
+            canvas.lineTo(pt.dx + offset.dx, size.y - (pt.dy + offset.dy));
+          }
           canvas.strokePath();
         }
       }
-
-      canvas.fillPath();
       canvas.restoreContext();
     }
   }

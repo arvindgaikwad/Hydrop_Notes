@@ -536,19 +536,55 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                     builder: (context, matrix, _) {
                       final scale = matrix.getMaxScaleOnAxis();
                       final percentage = (scale * 100).round();
+                      
+                      void zoom(double factor) {
+                        final size = MediaQuery.of(context).size;
+                        final center = Offset(size.width / 2, size.height / 2);
+                        final Matrix4 newMatrix = Matrix4.identity()
+                          ..translate(center.dx, center.dy)
+                          ..scale(factor)
+                          ..translate(-center.dx, -center.dy)
+                          ..multiply(matrix);
+                        _transformationController.value = newMatrix;
+                      }
+
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                         decoration: HydropTheme.of(context).toolbarDecoration,
-                        child: Text(
-                          '$percentage%',
-                          style: TextStyle(
-                            color: HydropTheme.of(context).textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove, size: 16),
+                              color: HydropTheme.of(context).textPrimary,
+                              onPressed: () => zoom(1 / 1.2),
+                              tooltip: 'Zoom Out',
+                              splashRadius: 16,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            ),
+                            Container(
+                              width: 44,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '$percentage%',
+                                style: TextStyle(
+                                  color: HydropTheme.of(context).textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add, size: 16),
+                              color: HydropTheme.of(context).textPrimary,
+                              onPressed: () => zoom(1.2),
+                              tooltip: 'Zoom In',
+                              splashRadius: 16,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            ),
+                          ],
                         ),
                       );
                     },
