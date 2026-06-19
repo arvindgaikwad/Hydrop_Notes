@@ -404,7 +404,7 @@ class ExportController {
     sb.writeln('</svg>');
 
     final bytes = Uint8List.fromList(utf8.encode(sb.toString()));
-    await Printing.sharePdf(bytes: bytes, filename: '$fileName.svg');
+    await _saveOrShare(bytes, fileName, 'svg');
   }
 
   static Future<void> exportToImage(
