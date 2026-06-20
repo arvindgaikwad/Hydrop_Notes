@@ -33,6 +33,7 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
   bool _showScenesPanel = false;
   bool _presentationMode = false;
   int _currentPresentationIndex = 0;
+  bool _initializedMobile = false;
 
   late AnimationController _cameraAnimationController;
   Animation<Matrix4>? _cameraAnimation;
@@ -225,6 +226,13 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
       child: ListenableBuilder(
         listenable: _canvasController,
         builder: (context, _) {
+        final isMobile = MediaQuery.sizeOf(context).width < 600;
+        if (isMobile && !_initializedMobile) {
+          _initializedMobile = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _canvasController.setTool(DrawingTool.pan);
+          });
+        }
         final isDrawing = _canvasController.currentTool != DrawingTool.pan;
         return Container(
           color: Colors.transparent,
@@ -232,20 +240,22 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
             children: [
               // High-performance zooming/panning background grid
               if (widget.note.canvasType == 'infinite' || widget.note.canvasType == 'limited_infinite')
-                ListenableBuilder(
-                  listenable: Listenable.merge([
-                    _canvasController.backgroundVariantNotifier,
-                    _canvasController.backgroundMaskNotifier,
-                  ]),
-                  builder: (context, _) {
-                    return CanvasBackgroundPattern(
-                      variant: _canvasController.backgroundVariantNotifier.value,
-                      mask: _canvasController.backgroundMaskNotifier.value,
-                      transformationController: _transformationController,
-                      fill: HydropTheme.of(context).primary.withValues(alpha: 0.1),
-                      isLimitedBounds: widget.note.canvasType == 'limited_infinite',
-                    );
-                  },
+                RepaintBoundary(
+                  child: ListenableBuilder(
+                    listenable: Listenable.merge([
+                      _canvasController.backgroundVariantNotifier,
+                      _canvasController.backgroundMaskNotifier,
+                    ]),
+                    builder: (context, _) {
+                      return CanvasBackgroundPattern(
+                        variant: _canvasController.backgroundVariantNotifier.value,
+                        mask: _canvasController.backgroundMaskNotifier.value,
+                        transformationController: _transformationController,
+                        fill: HydropTheme.of(context).primary.withValues(alpha: 0.1),
+                        isLimitedBounds: widget.note.canvasType == 'limited_infinite',
+                      );
+                    },
+                  ),
                 ),
 
               ExcludeSemantics(
@@ -260,126 +270,120 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
               ),
 
               // Export & Layers Buttons Overlay
-              Positioned(
-                right: 20,
-                top: 20,
-                child: SafeArea(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    decoration: HydropTheme.of(context).toolbarDecoration,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.file_download_outlined),
-                          tooltip: 'Export',
-                          color: HydropTheme.of(context).iconDefault,
-                          onPressed: () {
-                            _showExportDialog(context);
-                          },
+              if (!isMobile)
+                Positioned(
+                  right: 20,
+                  top: 20,
+                  child: SafeArea(
+                    child: HydropTheme.of(context).applyBackdrop(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 4,
                         ),
-                        Container(
-                          width: 1,
-                          height: 24,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          color: HydropTheme.of(context).divider,
+                        decoration: HydropTheme.of(context).toolbarDecoration,
+                        child: IconTheme(
+                          data: IconThemeData(weight: 300, size: 24, color: HydropTheme.of(context).iconDefault),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.file_download_outlined),
+                                tooltip: 'Export',
+                                color: HydropTheme.of(context).iconDefault,
+                                onPressed: () {
+                                  _showExportDialog(context);
+                                },
+                              ),
+                              Container(
+                                width: 1,
+                                height: 24,
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                color: HydropTheme.of(context).divider,
+                              ),
+                              PopupMenuButton<CanvasBackgroundVariant>(
+                                icon: const Icon(Icons.grid_on_rounded),
+                                tooltip: 'Background Pattern',
+                                color: HydropTheme.of(context).surface,
+                                onSelected: (variant) {
+                                  _canvasController.backgroundVariantNotifier.value = variant;
+                                  _canvasController.backgroundMaskNotifier.value = CanvasBackgroundMask.none;
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.none,
+                                    child: Text('None'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.dots,
+                                    child: Text('Dots'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.grid,
+                                    child: Text('Grid'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.diagonalStripes,
+                                    child: Text('Diagonal Stripes'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.horizontalLines,
+                                    child: Text('Horizontal Lines'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.verticalLines,
+                                    child: Text('Vertical Lines'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: CanvasBackgroundVariant.checkerboard,
+                                    child: Text('Checkerboard'),
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.bookmarks_outlined),
+                                tooltip: 'Scenes',
+                                color: _showScenesPanel
+                                    ? HydropTheme.of(context).primary
+                                    : HydropTheme.of(context).iconDefault,
+                                onPressed: () {
+                                  setState(() {
+                                    _showScenesPanel = !_showScenesPanel;
+                                    if (_showScenesPanel) {
+                                      _showLayersPanel = false;
+                                    }
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.layers_outlined),
+                                tooltip: 'Layers',
+                                color: _showLayersPanel
+                                    ? HydropTheme.of(context).primary
+                                    : HydropTheme.of(context).iconDefault,
+                                onPressed: () {
+                                  setState(() {
+                                    _showLayersPanel = !_showLayersPanel;
+                                    if (_showLayersPanel) {
+                                      _showScenesPanel = false;
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.layers_outlined),
-                          tooltip: 'Layers',
-                          color: _showLayersPanel
-                              ? HydropTheme.of(context).primary
-                              : HydropTheme.of(context).iconDefault,
-                          onPressed: () {
-                            setState(() {
-                              _showLayersPanel = !_showLayersPanel;
-                              if (_showLayersPanel) _showScenesPanel = false;
-                            });
-                          },
-                        ),
-                        PopupMenuButton<CanvasBackgroundVariant>(
-                          icon: const Icon(Icons.grid_on_rounded),
-                          tooltip: 'Background Pattern',
-                          color: HydropTheme.of(context).surface,
-                          onSelected: (variant) {
-                            _canvasController.backgroundVariantNotifier.value = variant;
-                            _canvasController.backgroundMaskNotifier.value = CanvasBackgroundMask.none;
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.none,
-                              child: Text('None'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.dots,
-                              child: Text('Dots'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.grid,
-                              child: Text('Grid'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.diagonalStripes,
-                              child: Text('Diagonal Stripes'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.horizontalLines,
-                              child: Text('Horizontal Lines'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.verticalLines,
-                              child: Text('Vertical Lines'),
-                            ),
-                            const PopupMenuItem(
-                              value: CanvasBackgroundVariant.checkerboard,
-                              child: Text('Checkerboard'),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.bookmarks_outlined),
-                          tooltip: 'Scenes',
-                          color: _showScenesPanel
-                              ? HydropTheme.of(context).iconActive
-                              : HydropTheme.of(context).iconDefault,
-                          onPressed: () {
-                            setState(() {
-                              _showScenesPanel = !_showScenesPanel;
-                              if (_showScenesPanel) {
-                                _showLayersPanel = false;
-                              }
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.layers_outlined),
-                          tooltip: 'Layers',
-                          color: _showLayersPanel
-                              ? HydropTheme.of(context).iconActive
-                              : HydropTheme.of(context).iconDefault,
-                          onPressed: () {
-                            setState(() {
-                              _showLayersPanel = !_showLayersPanel;
-                              if (_showLayersPanel) {
-                                _showScenesPanel = false;
-                              }
-                            });
-                          },
-                        ),
-                      ],
+                      ),
+                      borderRadius: BorderRadius.circular(HydropTheme.of(context).radiusXl),
                     ),
                   ),
                 ),
-              ),
 
               // Drawing Toolbar
-              DrawingToolbar(controller: _canvasController),
+              if (!isMobile) DrawingToolbar(controller: _canvasController),
 
               // Layers Panel
-              if (_showLayersPanel)
+              if (_showLayersPanel && !isMobile)
                 Positioned(
                   top: 0,
                   bottom: 0,
@@ -393,7 +397,7 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                 ),
 
               // Scenes Panel
-              if (_showScenesPanel)
+              if (_showScenesPanel && !isMobile)
                 Positioned(
                   top: 0,
                   bottom: 0,
@@ -426,6 +430,146 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                   ),
                 ),
 
+              // === MOBILE UI OVERLAYS ===
+              if (isMobile)
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: SafeArea(
+                    child: HydropTheme.of(context).applyBackdrop(
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: HydropTheme.of(context).toolbarDecoration,
+                        child: IconTheme(
+                          data: IconThemeData(weight: 300, size: 24, color: HydropTheme.of(context).iconDefault),
+                          child: IconButton(
+                            icon: const Icon(Icons.layers_outlined),
+                            color: HydropTheme.of(context).iconDefault,
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (ctx) => Container(
+                                  height: MediaQuery.sizeOf(context).height * 0.7,
+                                  decoration: BoxDecoration(
+                                    color: HydropTheme.of(context).surface,
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                    child: LayersPanel(
+                                      controller: _canvasController,
+                                      onClose: () => Navigator.pop(ctx),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      borderRadius: BorderRadius.circular(HydropTheme.of(context).radiusXl),
+                    ),
+                  ),
+                ),
+              if (isMobile)
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: SafeArea(
+                    child: HydropTheme.of(context).applyBackdrop(
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: HydropTheme.of(context).toolbarDecoration,
+                        child: IconTheme(
+                          data: IconThemeData(weight: 300, size: 24, color: HydropTheme.of(context).iconDefault),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.undo_outlined),
+                                color: HydropTheme.of(context).iconDefault,
+                                onPressed: _canvasController.undoStack.isNotEmpty ? _canvasController.undo : null,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.redo_outlined),
+                                color: HydropTheme.of(context).iconDefault,
+                                onPressed: _canvasController.redoStack.isNotEmpty ? _canvasController.redo : null,
+                              ),
+                              Container(
+                                width: 1,
+                                height: 24,
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                color: HydropTheme.of(context).divider,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.ios_share_outlined),
+                                color: HydropTheme.of(context).iconDefault,
+                                onPressed: () {
+                                  _showExportDialog(context);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      borderRadius: BorderRadius.circular(HydropTheme.of(context).radiusXl),
+                    ),
+                  ),
+                ),
+              if (isMobile)
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: SafeArea(
+                    child: FloatingActionButton(
+                      backgroundColor: HydropTheme.of(context).primary,
+                      elevation: 4,
+                      child: Icon(
+                        _canvasController.currentTool == DrawingTool.pan ? Icons.pan_tool :
+                        _canvasController.currentTool == DrawingTool.pixelEraser ? Icons.auto_fix_high :
+                        _canvasController.currentTool == DrawingTool.text ? Icons.text_fields :
+                        _canvasController.currentTool == DrawingTool.image ? Icons.image :
+                        _canvasController.currentTool == DrawingTool.connector ? Icons.timeline :
+                        _canvasController.currentTool == DrawingTool.normalPen ? Icons.edit :
+                        Icons.brush,
+                        color: HydropTheme.of(context).surface
+                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          builder: (ctx) => Container(
+                            decoration: BoxDecoration(
+                              color: HydropTheme.of(context).surface,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Wrap(
+                                spacing: 16,
+                                runSpacing: 16,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  _mobileToolButton(ctx, Icons.pan_tool, 'Pan', DrawingTool.pan),
+                                  _mobileToolButton(ctx, Icons.brush, 'Ink', DrawingTool.inkPen),
+                                  _mobileToolButton(ctx, Icons.edit, 'Pen', DrawingTool.normalPen),
+                                  _mobileToolButton(ctx, Icons.auto_fix_high, 'Erase', DrawingTool.pixelEraser),
+                                  _mobileToolButton(ctx, Icons.text_fields, 'Text', DrawingTool.text),
+                                  _mobileToolButton(ctx, Icons.image, 'Image', DrawingTool.image),
+                                  _mobileToolButton(ctx, Icons.timeline, 'Link', DrawingTool.connector),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
               // Floating Slideshow Controls Overlay
               if (_presentationMode && _canvasController.scenesNotifier.value.isNotEmpty)
                 Positioned(
@@ -434,163 +578,188 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                   bottom: 20,
                   child: Center(
                     child: SafeArea(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                      child: HydropTheme.of(context).applyBackdrop(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: HydropTheme.of(context).toolbarDecoration,
+                          child: IconTheme(
+                            data: IconThemeData(weight: 300, size: 24, color: HydropTheme.of(context).iconDefault),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back_ios_rounded),
+                                  tooltip: 'Previous Scene',
+                                  color: _currentPresentationIndex > 0
+                                      ? HydropTheme.of(context).iconDefault
+                                      : HydropTheme.of(context).textDisabled,
+                                  onPressed: _currentPresentationIndex > 0
+                                      ? () {
+                                          setState(() {
+                                            _currentPresentationIndex--;
+                                          });
+                                          _animateToScene(
+                                            _canvasController.scenesNotifier.value[_currentPresentationIndex],
+                                          );
+                                        }
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  '${_currentPresentationIndex + 1} of ${_canvasController.scenesNotifier.value.length}: ${_canvasController.scenesNotifier.value[_currentPresentationIndex].name}',
+                                  style: TextStyle(
+                                    color: HydropTheme.of(context).textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_forward_ios_rounded),
+                                  tooltip: 'Next Scene',
+                                  color: _currentPresentationIndex <
+                                          _canvasController.scenesNotifier.value.length - 1
+                                      ? HydropTheme.of(context).iconDefault
+                                      : HydropTheme.of(context).textDisabled,
+                                  onPressed: _currentPresentationIndex <
+                                          _canvasController.scenesNotifier.value.length - 1
+                                      ? () {
+                                          setState(() {
+                                            _currentPresentationIndex++;
+                                          });
+                                          _animateToScene(
+                                            _canvasController.scenesNotifier.value[_currentPresentationIndex],
+                                          );
+                                        }
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 1,
+                                  height: 24,
+                                  color: HydropTheme.of(context).divider,
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.redAccent,
+                                  ),
+                                  tooltip: 'Exit Slideshow',
+                                  onPressed: () {
+                                    setState(() {
+                                      _presentationMode = false;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        decoration: HydropTheme.of(context).toolbarDecoration,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back_ios_rounded),
-                              tooltip: 'Previous Scene',
-                              color: _currentPresentationIndex > 0
-                                  ? HydropTheme.of(context).iconDefault
-                                  : HydropTheme.of(context).textDisabled,
-                              onPressed: _currentPresentationIndex > 0
-                                  ? () {
-                                      setState(() {
-                                        _currentPresentationIndex--;
-                                      });
-                                      _animateToScene(
-                                        _canvasController.scenesNotifier.value[_currentPresentationIndex],
-                                      );
-                                    }
-                                  : null,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '${_currentPresentationIndex + 1} of ${_canvasController.scenesNotifier.value.length}: ${_canvasController.scenesNotifier.value[_currentPresentationIndex].name}',
-                              style: TextStyle(
-                                color: HydropTheme.of(context).textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            IconButton(
-                              icon: const Icon(Icons.arrow_forward_ios_rounded),
-                              tooltip: 'Next Scene',
-                              color: _currentPresentationIndex <
-                                      _canvasController.scenesNotifier.value.length - 1
-                                  ? HydropTheme.of(context).iconDefault
-                                  : HydropTheme.of(context).textDisabled,
-                              onPressed: _currentPresentationIndex <
-                                      _canvasController.scenesNotifier.value.length - 1
-                                  ? () {
-                                      setState(() {
-                                        _currentPresentationIndex++;
-                                      });
-                                      _animateToScene(
-                                        _canvasController.scenesNotifier.value[_currentPresentationIndex],
-                                      );
-                                    }
-                                  : null,
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 1,
-                              height: 24,
-                              color: HydropTheme.of(context).divider,
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                color: Colors.redAccent,
-                              ),
-                              tooltip: 'Exit Slideshow',
-                              onPressed: () {
-                                setState(() {
-                                  _presentationMode = false;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
+                        borderRadius: BorderRadius.circular(HydropTheme.of(context).radiusXl),
                       ),
                     ),
                   ),
                 ),
 
               // Minimap
-              Positioned(
-                right: 20,
-                bottom: 20,
-                child: SafeArea(
-                  child: Minimap(
-                    canvasController: _canvasController,
-                    transformationController: _transformationController,
+              if (!isMobile)
+                Positioned(
+                  right: 20,
+                  bottom: 20,
+                  child: SafeArea(
+                    child: Minimap(
+                      canvasController: _canvasController,
+                      transformationController: _transformationController,
+                    ),
                   ),
                 ),
-              ),
 
               // Zoom Percentage
-              Positioned(
-                left: 20,
-                bottom: 20,
-                child: SafeArea(
-                  child: ValueListenableBuilder<Matrix4>(
-                    valueListenable: _transformationController,
-                    builder: (context, matrix, _) {
-                      final scale = matrix.getMaxScaleOnAxis();
-                      final percentage = (scale * 100).round();
-                      
-                      void zoom(double factor) {
-                        final size = MediaQuery.of(context).size;
-                        final center = Offset(size.width / 2, size.height / 2);
-                        final Matrix4 newMatrix = Matrix4.identity()
-                          ..translate(center.dx, center.dy)
-                          ..scale(factor)
-                          ..translate(-center.dx, -center.dy)
-                          ..multiply(matrix);
-                        _transformationController.value = newMatrix;
-                      }
+              if (!isMobile)
+                Positioned(
+                  left: 20,
+                  bottom: 20,
+                  child: SafeArea(
+                    child: ValueListenableBuilder<Matrix4>(
+                      valueListenable: _transformationController,
+                      builder: (context, matrix, _) {
+                        final scale = matrix.getMaxScaleOnAxis();
+                        final percentage = (scale * 100).round();
+                        
+                        void zoom(double factor) {
+                          final size = MediaQuery.of(context).size;
+                          final center = Offset(size.width / 2, size.height / 2);
+                          final Matrix4 newMatrix = Matrix4.identity()
+                            ..translate(center.dx, center.dy)
+                            ..scale(factor)
+                            ..translate(-center.dx, -center.dy)
+                            ..multiply(matrix);
+                          _transformationController.value = newMatrix;
+                        }
 
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                        decoration: HydropTheme.of(context).toolbarDecoration,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove, size: 16),
-                              color: HydropTheme.of(context).textPrimary,
-                              onPressed: () => zoom(1 / 1.2),
-                              tooltip: 'Zoom Out',
-                              splashRadius: 16,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                            Container(
-                              width: 44,
-                              alignment: Alignment.center,
-                              child: Text(
-                                '$percentage%',
-                                style: TextStyle(
-                                  color: HydropTheme.of(context).textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
+                        final ht = HydropTheme.of(context);
+                        return ht.applyBackdrop(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            decoration: ht.toolbarDecoration,
+                            child: IconTheme(
+                              data: IconThemeData(weight: 300, size: 20, color: ht.textSecondary),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => zoom(1.0 / scale), // Reset to 100%
+                                    behavior: HitTestBehavior.opaque,
+                                    child: Container(
+                                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '$percentage%',
+                                        style: TextStyle(
+                                          color: ht.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 24,
+                                    width: 1,
+                                    color: ht.divider,
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    color: ht.textSecondary,
+                                    onPressed: () => zoom(1 / 1.2),
+                                    tooltip: 'Zoom Out',
+                                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                                    splashRadius: 22,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    color: ht.textSecondary,
+                                    onPressed: () => zoom(1.2),
+                                    tooltip: 'Zoom In',
+                                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                                    splashRadius: 22,
+                                  ),
+                                ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.add, size: 16),
-                              color: HydropTheme.of(context).textPrimary,
-                              onPressed: () => zoom(1.2),
-                              tooltip: 'Zoom In',
-                              splashRadius: 16,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                          ),
+                          borderRadius: BorderRadius.circular(ht.radiusXl),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
 
               // Export Frame Confirmation
               if (_canvasController.currentTool == DrawingTool.exportFrame)
@@ -600,86 +769,90 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                   bottom: 100,
                   child: Center(
                     child: SafeArea(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: HydropTheme.of(context).toolbarDecoration,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextButton.icon(
-                              icon: const Icon(Icons.close, color: Colors.redAccent),
-                              label: const Text('Cancel', style: TextStyle(color: Colors.redAccent)),
-                              onPressed: () {
-                                setState(() {
-                                  _canvasController.currentTool = DrawingTool.pan;
-                                  _canvasController.exportFrameNotifier.value = null;
-                                });
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.check, color: Colors.white),
-                              label: const Text('Confirm Export', style: TextStyle(color: Colors.white)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: HydropTheme.of(context).primary,
+                      child: HydropTheme.of(context).applyBackdrop(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: HydropTheme.of(context).toolbarDecoration,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.close, color: Colors.redAccent),
+                                label: const Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+                                onPressed: () {
+                                  setState(() {
+                                    _canvasController.currentTool = DrawingTool.pan;
+                                    _canvasController.exportFrameNotifier.value = null;
+                                  });
+                                },
                               ),
-                              onPressed: () async {
-                                final format = _canvasController.pendingExportFormatNotifier.value;
-                                final rect = _canvasController.exportFrameNotifier.value;
-                                
-                                setState(() {
-                                  _canvasController.setTool(DrawingTool.pan);
-                                  _canvasController.exportFrameNotifier.value = null;
-                                });
+                              const SizedBox(width: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.check, color: Colors.white),
+                                label: const Text('Confirm Export', style: TextStyle(color: Colors.white)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: HydropTheme.of(context).primary,
+                                  elevation: 0,
+                                ),
+                                onPressed: () async {
+                                  final format = _canvasController.pendingExportFormatNotifier.value;
+                                  final rect = _canvasController.exportFrameNotifier.value;
+                                  
+                                  setState(() {
+                                    _canvasController.setTool(DrawingTool.pan);
+                                    _canvasController.exportFrameNotifier.value = null;
+                                  });
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Exporting to $format...')),
-                                );
-
-                                if (format == 'png') {
-                                  await ExportController.exportToImage(
-                                    context, 
-                                    _canvasController.layersNotifier.value, 
-                                    cropRect: rect, 
-                                    fileName: _canvasController.pendingExportNameNotifier.value,
-                                    includeGrid: _canvasController.pendingExportIncludeGrid,
-                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                  );
-                                } else if (format == 'svg') {
-                                  await ExportController.exportToSvg(
-                                    context, 
-                                    _canvasController.layersNotifier.value, 
-                                    cropRect: rect, 
-                                    fileName: _canvasController.pendingExportNameNotifier.value,
-                                    includeGrid: _canvasController.pendingExportIncludeGrid,
-                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                  );
-                                } else {
-                                  await ExportController.exportToPdf(
-                                    _canvasController.layersNotifier.value, 
-                                    canvasType: widget.note.canvasType, 
-                                    cropRect: rect, 
-                                    fileName: _canvasController.pendingExportNameNotifier.value,
-                                    includeGrid: _canvasController.pendingExportIncludeGrid,
-                                    transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                    backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                  );
-                                }
-
-                                if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Export Complete!')),
+                                    SnackBar(content: Text('Exporting to $format...')),
                                   );
-                                }
-                              },
-                            ),
-                          ],
+
+                                  if (format == 'png') {
+                                    await ExportController.exportToImage(
+                                      context, 
+                                      _canvasController.layersNotifier.value, 
+                                      cropRect: rect, 
+                                      fileName: _canvasController.pendingExportNameNotifier.value,
+                                      includeGrid: _canvasController.pendingExportIncludeGrid,
+                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                    );
+                                  } else if (format == 'svg') {
+                                    await ExportController.exportToSvg(
+                                      context, 
+                                      _canvasController.layersNotifier.value, 
+                                      cropRect: rect, 
+                                      fileName: _canvasController.pendingExportNameNotifier.value,
+                                      includeGrid: _canvasController.pendingExportIncludeGrid,
+                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                    );
+                                  } else {
+                                    await ExportController.exportToPdf(
+                                      _canvasController.layersNotifier.value, 
+                                      canvasType: widget.note.canvasType, 
+                                      cropRect: rect, 
+                                      fileName: _canvasController.pendingExportNameNotifier.value,
+                                      includeGrid: _canvasController.pendingExportIncludeGrid,
+                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                    );
+                                  }
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Export Complete!')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ),
+                        borderRadius: BorderRadius.circular(HydropTheme.of(context).radiusXl),
                       ),
                     ),
                   ),
@@ -893,6 +1066,42 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
           },
         );
       },
+    );
+  }
+
+  Widget _mobileToolButton(BuildContext context, IconData icon, String label, DrawingTool tool) {
+    final ht = HydropTheme.of(context);
+    final isSelected = _canvasController.currentTool == tool;
+    return GestureDetector(
+      onTap: () {
+        _canvasController.setTool(tool);
+        Navigator.pop(context);
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: isSelected ? ht.primary.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(ht.radiusLg),
+          border: Border.all(color: isSelected ? ht.primary : Colors.transparent),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: isSelected ? ht.iconActive : ht.iconDefault, size: 28),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: isSelected ? ht.textPrimary : ht.textSecondary,
+                fontWeight: isSelected ? ht.fontBold : ht.fontMedium,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

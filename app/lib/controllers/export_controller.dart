@@ -69,7 +69,7 @@ class ExportController {
   static Future<void> _saveOrShare(Uint8List bytes, String fileName, String extension) async {
     try {
       if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-        String? outputFile = await FilePicker.saveFile(
+        String? outputFile = await FilePicker.platform.saveFile(
           dialogTitle: 'Save Export',
           fileName: '$fileName.$extension',
         );

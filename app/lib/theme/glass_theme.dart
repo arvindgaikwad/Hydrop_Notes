@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'hydrop_theme.dart';
 
 /// 💧 GLASS THEME — Fluid Glass
@@ -159,10 +158,18 @@ class GlassTheme extends HydropTheme {
 
   @override
   Widget applyBackdrop(Widget child, {BorderRadius? borderRadius}) {
-    return ClipRRect(
-      borderRadius: borderRadius ?? BorderRadius.zero,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
+    // BackdropFilter is extremely heavy and causes rendering glitches
+    // when nested inside AnimatedCrossFade/AnimatedContainer on Windows.
+    // Instead of a true blur, we apply a translucent overlay to simulate glass,
+    // which keeps the app buttery smooth and visible.
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0x33FFFFFF), // 20% white overlay to simulate glass
+        borderRadius: borderRadius ?? BorderRadius.zero,
+        border: Border.fromBorderSide(borderThin),
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius ?? BorderRadius.zero,
         child: child,
       ),
     );

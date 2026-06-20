@@ -1,0 +1,39 @@
+# ============================================================
+# .graphifyignore — Hydrop Notes
+# Keeps graph signal-only: Dart source + architecture docs.
+# ============================================================
+
+# --- Flutter Windows boilerplate (auto-generated, zero signal) ---
+app/windows/flutter/ephemeral/
+app/windows/flutter/generated_plugin_registrant.*
+app/windows/runner/
+
+# --- Flutter iOS boilerplate ---
+app/ios/Flutter/ephemeral/
+app/ios/Runner/Assets.xcassets/
+app/ios/Runner/GeneratedPluginRegistrant.*
+app/ios/Runner/Runner-Bridging-Header.h
+app/ios/Runner/SceneDelegate.swift
+app/ios/Runner/AppDelegate.swift
+app/ios/RunnerTests/
+app/ios/Flutter/flutter_export_environment.sh
+
+# --- Flutter Android boilerplate ---
+app/android/
+
+# --- Session chat logs (massive noise, 350-edge god node) ---
+_Docs/05_Session_Logs/
+
+# --- Design images and PDFs (not indexable as graph nodes) ---
+_Docs/03_Design_and_UX/Screens/
+_Docs/03_Design_and_UX/uiux_design_plan.pdf
+
+# --- App icons and web assets ---
+app/web/icons/
+app/web/favicon.png
+
+# --- JVM crash logs ---
+*.log
+
+# --- Flutter test boilerplate ---
+app/test/widget_test.dart

@@ -17,9 +17,53 @@ enum ToolbarDock { left, right, top, bottom }
 class _DrawingToolbarState extends State<DrawingToolbar> {
   ToolbarDock _dock = ToolbarDock.left;
   final GlobalKey _colorButtonKey = GlobalKey();
+  bool _isMinimized = false;
 
   bool get _isVertical =>
       _dock == ToolbarDock.left || _dock == ToolbarDock.right;
+
+  BorderRadiusGeometry _getBorderRadius(HydropTheme ht) {
+    // We use a large radius like 24 to match typical toolbar pill shapes
+    const double radius = 24.0;
+    
+    // The side touching the edge always has 0 radius (flush), even when minimized!
+    switch (_dock) {
+      case ToolbarDock.left:
+        return const BorderRadius.horizontal(right: Radius.circular(radius));
+      case ToolbarDock.right:
+        return const BorderRadius.horizontal(left: Radius.circular(radius));
+      case ToolbarDock.top:
+        return const BorderRadius.vertical(bottom: Radius.circular(radius));
+      case ToolbarDock.bottom:
+        return const BorderRadius.vertical(top: Radius.circular(radius));
+    }
+  }
+
+  IconData _getExpandIcon() {
+    switch (_dock) {
+      case ToolbarDock.left:
+        return Icons.chevron_right;
+      case ToolbarDock.right:
+        return Icons.chevron_left;
+      case ToolbarDock.top:
+        return Icons.expand_more;
+      case ToolbarDock.bottom:
+        return Icons.expand_less;
+    }
+  }
+
+  IconData _getCollapseIcon() {
+    switch (_dock) {
+      case ToolbarDock.left:
+        return Icons.chevron_left;
+      case ToolbarDock.right:
+        return Icons.chevron_right;
+      case ToolbarDock.top:
+        return Icons.expand_less;
+      case ToolbarDock.bottom:
+        return Icons.expand_more;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,22 +87,39 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
       alignment: alignment,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: ListenableBuilder(
-          listenable: widget.controller,
-          builder: (context, _) {
-            final ht = HydropTheme.of(context);
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.all(ht.space8),
-              decoration: ht.toolbarDecoration,
-              child: _isVertical
-                  ? _buildVerticalLayout(ht)
-                  : _buildHorizontalLayout(ht),
-            );
-          },
-        ),
+      child: ListenableBuilder(
+        listenable: widget.controller,
+        builder: (context, _) {
+          final ht = HydropTheme.of(context);
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.all(ht.space8),
+            decoration: ht.toolbarDecoration.copyWith(
+              borderRadius: _getBorderRadius(ht),
+              border: Border.all(color: Colors.transparent, width: 0), // Remove border
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(20), // Soft shadow for depth
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                )
+              ],
+            ),
+            child: IconTheme(
+              data: IconThemeData(weight: 300, size: 24, color: ht.iconDefault),
+              child: _isMinimized
+                  ? IconButton(
+                      icon: Icon(_getExpandIcon(), color: ht.iconDefault),
+                      tooltip: 'Expand Toolbar',
+                      onPressed: () => setState(() => _isMinimized = false),
+                    )
+                  : (_isVertical
+                      ? _buildVerticalLayout(ht)
+                      : _buildHorizontalLayout(ht)),
+            ),
+          );
+        },
       ),
     );
   }
@@ -83,7 +144,9 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
         c.currentTool == DrawingTool.normalPen ||
         c.currentTool == DrawingTool.tape ||
         c.currentTool == DrawingTool.connector;
-    bool showSlider = showColors || c.currentTool == DrawingTool.pixelEraser;
+    bool showSlider = c.currentTool == DrawingTool.tape ||
+        c.currentTool == DrawingTool.connector ||
+        c.currentTool == DrawingTool.pixelEraser;
 
     List<Widget> tools = [
       // Dock Handle
@@ -129,6 +192,12 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
         ],
       ),
       _spacer(ht),
+      IconButton(
+        icon: Icon(_getCollapseIcon(), color: ht.iconDefault),
+        tooltip: 'Minimize Toolbar',
+        onPressed: () => setState(() => _isMinimized = true),
+      ),
+      _divider(ht),
 
       // Actions
       IconButton(
@@ -145,19 +214,10 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
 
       // Tools
       _SelectFlyout(controller: c, isVertical: _isVertical, dock: _dock),
-      _ToolButton(
-        icon: Icons.edit,
-        label: 'Normal Pen',
-        isSelected: c.currentTool == DrawingTool.normalPen,
-        onTap: () => c.setTool(DrawingTool.normalPen),
-      ),
-      _ToolButton(
-        icon: Icons.brush,
-        label: 'Ink Pen',
-        isSelected: c.currentTool == DrawingTool.inkPen,
-        onTap: () => c.setTool(DrawingTool.inkPen),
-      ),
+      _divider(ht),
+      _PenFlyout(controller: c, isVertical: _isVertical, dock: _dock),
       _EraserFlyout(controller: c, isVertical: _isVertical, dock: _dock),
+      _InsertFlyout(controller: c, isVertical: _isVertical, dock: _dock),
       _ToolButton(
         icon: Icons.text_fields,
         label: 'Text',
@@ -165,23 +225,12 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
         onTap: () => c.setTool(DrawingTool.text),
       ),
       _ToolButton(
-        icon: Icons.article,
-        label: 'Document',
-        isSelected: c.currentTool == DrawingTool.document,
-        onTap: () => c.setTool(DrawingTool.document),
-      ),
-      _ToolButton(
         icon: Icons.timeline,
         label: 'Connector',
         isSelected: c.currentTool == DrawingTool.connector,
         onTap: () => c.setTool(DrawingTool.connector),
       ),
-      _ToolButton(
-        icon: Icons.image,
-        label: 'Image',
-        isSelected: c.currentTool == DrawingTool.image,
-        onTap: () => c.setTool(DrawingTool.image),
-      ),
+      _divider(ht),
       _ToolButton(
         icon: Icons.pan_tool,
         label: 'Pan',
@@ -195,6 +244,27 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
         onTap: () => c.setTool(DrawingTool.tape),
       ),
     ];
+
+    if (showSlider) {
+      tools.add(_spacer(ht));
+      tools.add(
+        RotatedBox(
+          quarterTurns: _isVertical ? 3 : 0,
+          child: SizedBox(
+            width: 120,
+            height: 36,
+            child: Slider(
+              value: c.currentWidth,
+              min: 1.0,
+              max: 20.0,
+              activeColor: ht.iconActive,
+              inactiveColor: ht.iconActive.withValues(alpha: 0.1),
+              onChanged: (val) => c.setWidth(val),
+            ),
+          ),
+        ),
+      );
+    }
 
     if (showColors) {
       tools.add(_divider(ht));
@@ -218,27 +288,6 @@ class _DrawingToolbarState extends State<DrawingToolbar> {
               controller: c,
             );
           },
-        ),
-      );
-    }
-
-    if (showSlider) {
-      tools.add(_spacer(ht));
-      tools.add(
-        RotatedBox(
-          quarterTurns: _isVertical ? 3 : 0,
-          child: SizedBox(
-            width: 120,
-            height: 36,
-            child: Slider(
-              value: c.currentWidth,
-              min: 1.0,
-              max: 20.0,
-              activeColor: ht.primary,
-              inactiveColor: ht.primary.withValues(alpha: 0.1),
-              onChanged: (val) => c.setWidth(val),
-            ),
-          ),
         ),
       );
     }
@@ -283,41 +332,33 @@ class _ToolButton extends StatelessWidget {
       button: true,
       selected: isSelected,
       label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 48,
-          height: 48,
-          decoration: isSelected
-              ? BoxDecoration(
-                  color: ht.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(ht.radiusLg),
-                  border: Border.all(color: ht.primary),
-                )
-              : BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(ht.radiusLg),
-                  border: Border.all(color: Colors.transparent),
-                ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
+      child: Tooltip(
+        message: label,
+        waitDuration: const Duration(milliseconds: 500),
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 40,
+            height: 40,
+            decoration: isSelected
+                ? BoxDecoration(
+                    color: ht.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(ht.radiusLg),
+                    border: Border.all(color: ht.primary),
+                  )
+                : BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(ht.radiusLg),
+                    border: Border.all(color: Colors.transparent),
+                  ),
+            child: Center(
+              child: Icon(
                 icon,
                 color: isSelected ? ht.iconActive : ht.iconDefault,
                 size: 20,
               ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 8,
-                  color: isSelected ? ht.textPrimary : ht.textSecondary,
-                  fontWeight: isSelected ? ht.fontBold : ht.fontMedium,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -475,21 +516,21 @@ class _SelectFlyoutOverlayState extends State<_SelectFlyoutOverlay>
     switch (widget.dock) {
       case ToolbarDock.left:
         left = widget.origin.dx + widget.size.width + 8;
-        top = widget.origin.dy;
+        top = widget.origin.dy + widget.size.height / 2;
         isPanelHorizontal = true;
         break;
       case ToolbarDock.right:
         right = (screenWidth - widget.origin.dx) + 8;
-        top = widget.origin.dy;
+        top = widget.origin.dy + widget.size.height / 2;
         isPanelHorizontal = true;
         break;
       case ToolbarDock.top:
-        left = widget.origin.dx;
+        left = widget.origin.dx + widget.size.width / 2;
         top = widget.origin.dy + widget.size.height + 8;
         isPanelHorizontal = false;
         break;
       case ToolbarDock.bottom:
-        left = widget.origin.dx;
+        left = widget.origin.dx + widget.size.width / 2;
         bottom = (screenHeight - widget.origin.dy) + 8;
         isPanelHorizontal = false;
         break;
@@ -508,8 +549,12 @@ class _SelectFlyoutOverlayState extends State<_SelectFlyoutOverlay>
             child: GestureDetector(
               onTap: () {},
               behavior: HitTestBehavior.opaque,
-              child: ScaleTransition(
-                scale: _expandAnimation,
+              child: FractionalTranslation(
+                translation: widget.dock == ToolbarDock.top || widget.dock == ToolbarDock.bottom
+                    ? const Offset(-0.5, 0)
+                    : const Offset(0, -0.5),
+                child: ScaleTransition(
+                  scale: _expandAnimation,
                 alignment: widget.dock == ToolbarDock.left
                     ? Alignment.centerLeft
                     : (widget.dock == ToolbarDock.right
@@ -570,6 +615,7 @@ class _SelectFlyoutOverlayState extends State<_SelectFlyoutOverlay>
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
+              ),
               ),
             ),
           ),
@@ -743,21 +789,21 @@ class _EraserFlyoutOverlayState extends State<_EraserFlyoutOverlay>
     switch (widget.dock) {
       case ToolbarDock.left:
         left = widget.origin.dx + widget.size.width + 8;
-        top = widget.origin.dy;
+        top = widget.origin.dy + widget.size.height / 2;
         isPanelHorizontal = true;
         break;
       case ToolbarDock.right:
         right = (screenWidth - widget.origin.dx) + 8;
-        top = widget.origin.dy;
+        top = widget.origin.dy + widget.size.height / 2;
         isPanelHorizontal = true;
         break;
       case ToolbarDock.top:
-        left = widget.origin.dx;
+        left = widget.origin.dx + widget.size.width / 2;
         top = widget.origin.dy + widget.size.height + 8;
         isPanelHorizontal = false;
         break;
       case ToolbarDock.bottom:
-        left = widget.origin.dx;
+        left = widget.origin.dx + widget.size.width / 2;
         bottom = (screenHeight - widget.origin.dy) + 8;
         isPanelHorizontal = false;
         break;
@@ -776,8 +822,12 @@ class _EraserFlyoutOverlayState extends State<_EraserFlyoutOverlay>
             child: GestureDetector(
               onTap: () {},
               behavior: HitTestBehavior.opaque,
-              child: ScaleTransition(
-                scale: _expandAnimation,
+              child: FractionalTranslation(
+                translation: widget.dock == ToolbarDock.top || widget.dock == ToolbarDock.bottom
+                    ? const Offset(-0.5, 0)
+                    : const Offset(0, -0.5),
+                child: ScaleTransition(
+                  scale: _expandAnimation,
                 alignment: widget.dock == ToolbarDock.left
                     ? Alignment.centerLeft
                     : (widget.dock == ToolbarDock.right
@@ -816,6 +866,7 @@ class _EraserFlyoutOverlayState extends State<_EraserFlyoutOverlay>
                   ),
                 ),
               ),
+              ),
             ),
           ),
         ],
@@ -831,6 +882,529 @@ class _EraserFlyoutOverlayState extends State<_EraserFlyoutOverlay>
         isSelected: isStroke,
         onTap: () {
           widget.controller.setTool(DrawingTool.strokeEraser);
+          closeWithAnimation();
+        },
+      ),
+    ];
+  }
+}
+
+class _PenFlyout extends StatefulWidget {
+  final CanvasController controller;
+  final bool isVertical;
+  final ToolbarDock dock;
+
+  const _PenFlyout({
+    required this.controller,
+    required this.isVertical,
+    required this.dock,
+  });
+
+  @override
+  State<_PenFlyout> createState() => _PenFlyoutState();
+}
+
+class _PenFlyoutState extends State<_PenFlyout> {
+  final GlobalKey _buttonKey = GlobalKey();
+  final GlobalKey<_PenFlyoutOverlayState> _overlayKey = GlobalKey<_PenFlyoutOverlayState>();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void dispose() {
+    _closeOverlay();
+    super.dispose();
+  }
+
+  void _closeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _toggleMenu() {
+    if (_overlayEntry != null) {
+      _overlayKey.currentState?.closeWithAnimation();
+    } else {
+      final RenderBox renderBox = _buttonKey.currentContext!.findRenderObject() as RenderBox;
+      final Offset position = renderBox.localToGlobal(Offset.zero);
+      final Size size = renderBox.size;
+
+      _overlayEntry = OverlayEntry(
+        builder: (context) => _PenFlyoutOverlay(
+          key: _overlayKey,
+          origin: position,
+          size: size,
+          dock: widget.dock,
+          controller: widget.controller,
+          onClose: () {
+            _overlayEntry?.remove();
+            setState(() {
+              _overlayEntry = null;
+            });
+          },
+        ),
+      );
+
+      Overlay.of(context).insert(_overlayEntry!);
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isNormal = widget.controller.currentTool == DrawingTool.normalPen;
+    bool isInk = widget.controller.currentTool == DrawingTool.inkPen;
+    bool isActive = isNormal || isInk;
+
+    return _ToolButton(
+      key: _buttonKey,
+      icon: isActive ? (isInk ? Icons.brush : Icons.edit) : Icons.edit,
+      label: isActive ? (isInk ? 'Ink Pen' : 'Normal Pen') : 'Pen',
+      isSelected: isActive,
+      onTap: () {
+        if (isActive) {
+          _toggleMenu();
+        } else {
+          widget.controller.setTool(DrawingTool.normalPen);
+        }
+      },
+    );
+  }
+}
+
+class _PenFlyoutOverlay extends StatefulWidget {
+  final Offset origin;
+  final Size size;
+  final ToolbarDock dock;
+  final CanvasController controller;
+  final VoidCallback onClose;
+
+  const _PenFlyoutOverlay({
+    required Key key,
+    required this.origin,
+    required this.size,
+    required this.dock,
+    required this.controller,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  State<_PenFlyoutOverlay> createState() => _PenFlyoutOverlayState();
+}
+
+class _PenFlyoutOverlayState extends State<_PenFlyoutOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+  late Animation<double> _expandAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _expandAnimation = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
+    _anim.forward();
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  void closeWithAnimation() {
+    if (_anim.isAnimating) return;
+    _anim.reverse().then((_) {
+      widget.onClose();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double? left, right, top, bottom;
+    bool isPanelHorizontal = false;
+
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    switch (widget.dock) {
+      case ToolbarDock.left:
+        left = widget.origin.dx + widget.size.width + 8;
+        top = widget.origin.dy + widget.size.height / 2;
+        isPanelHorizontal = true;
+        break;
+      case ToolbarDock.right:
+        right = (screenWidth - widget.origin.dx) + 8;
+        top = widget.origin.dy + widget.size.height / 2;
+        isPanelHorizontal = true;
+        break;
+      case ToolbarDock.top:
+        left = widget.origin.dx + widget.size.width / 2;
+        top = widget.origin.dy + widget.size.height + 8;
+        isPanelHorizontal = false;
+        break;
+      case ToolbarDock.bottom:
+        left = widget.origin.dx + widget.size.width / 2;
+        bottom = (screenHeight - widget.origin.dy) + 8;
+        isPanelHorizontal = false;
+        break;
+    }
+
+    return GestureDetector(
+      onTap: closeWithAnimation,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        children: [
+          Positioned(
+            left: left, right: right, top: top, bottom: bottom,
+            child: GestureDetector(
+              onTap: () {},
+              behavior: HitTestBehavior.opaque,
+              child: FractionalTranslation(
+                translation: widget.dock == ToolbarDock.top || widget.dock == ToolbarDock.bottom
+                    ? const Offset(-0.5, 0)
+                    : const Offset(0, -0.5),
+                child: ScaleTransition(
+                  scale: _expandAnimation,
+                alignment: widget.dock == ToolbarDock.left ? Alignment.centerLeft : (widget.dock == ToolbarDock.right ? Alignment.centerRight : (widget.dock == ToolbarDock.top ? Alignment.topCenter : Alignment.bottomCenter)),
+                child: Material(
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(24),
+                  color: HydropTheme.of(context).surface.withValues(alpha: 0.95),
+                  child: HydropTheme.of(context).applyBackdrop(
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: HydropTheme.of(context).divider, width: 1.5),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 3))],
+                      ),
+                      child: ListenableBuilder(
+                        listenable: widget.controller,
+                        builder: (context, _) {
+                          bool isNormal = widget.controller.currentTool == DrawingTool.normalPen;
+                          bool isInk = widget.controller.currentTool == DrawingTool.inkPen;
+                          return isPanelHorizontal
+                              ? Row(mainAxisSize: MainAxisSize.min, children: _buildPanelButtons(isNormal, isInk, true))
+                              : Column(mainAxisSize: MainAxisSize.min, children: _buildPanelButtons(isNormal, isInk, false));
+                        },
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSizePreset(double size, double currentSize) {
+    final ht = HydropTheme.of(context);
+    final isSelected = (currentSize - size).abs() < 1.0;
+    
+    double visualSize = 4.0;
+    if (size > 3.0 && size < 8.0) visualSize = 8.0;
+    if (size >= 8.0 && size < 15.0) visualSize = 14.0;
+    if (size >= 15.0) visualSize = 20.0;
+
+    return GestureDetector(
+      onTap: () {
+        widget.controller.setWidth(size);
+        closeWithAnimation();
+      },
+      child: Container(
+        width: 32,
+        height: 32,
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? ht.primary.withAlpha(30) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          width: visualSize,
+          height: visualSize,
+          decoration: BoxDecoration(
+            color: isSelected ? ht.primary : ht.textSecondary,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildPanelButtons(bool isNormal, bool isInk, bool isHorizontal) {
+    final ht = HydropTheme.of(context);
+    final c = widget.controller;
+    
+    Widget divider = Container(
+      width: isHorizontal ? 1 : ht.space24,
+      height: isHorizontal ? ht.space24 : 1,
+      color: ht.divider,
+      margin: EdgeInsets.symmetric(
+        horizontal: isHorizontal ? ht.space8 : 0,
+        vertical: isHorizontal ? 0 : ht.space8,
+      ),
+    );
+
+    return [
+      _ToolButton(
+        icon: Icons.edit,
+        label: 'Normal Pen',
+        isSelected: isNormal,
+        onTap: () {
+          widget.controller.setTool(DrawingTool.normalPen);
+          closeWithAnimation();
+        },
+      ),
+      _ToolButton(
+        icon: Icons.brush,
+        label: 'Ink Pen',
+        isSelected: isInk,
+        onTap: () {
+          widget.controller.setTool(DrawingTool.inkPen);
+          closeWithAnimation();
+        },
+      ),
+      divider,
+      _buildSizePreset(2.0, c.currentWidth),
+      _buildSizePreset(5.0, c.currentWidth),
+      _buildSizePreset(10.0, c.currentWidth),
+      _buildSizePreset(16.0, c.currentWidth),
+    ];
+  }
+}
+
+class _InsertFlyout extends StatefulWidget {
+  final CanvasController controller;
+  final bool isVertical;
+  final ToolbarDock dock;
+
+  const _InsertFlyout({
+    required this.controller,
+    required this.isVertical,
+    required this.dock,
+  });
+
+  @override
+  State<_InsertFlyout> createState() => _InsertFlyoutState();
+}
+
+class _InsertFlyoutState extends State<_InsertFlyout> {
+  final GlobalKey _buttonKey = GlobalKey();
+  final GlobalKey<_InsertFlyoutOverlayState> _overlayKey = GlobalKey<_InsertFlyoutOverlayState>();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void dispose() {
+    _closeOverlay();
+    super.dispose();
+  }
+
+  void _closeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _toggleMenu() {
+    if (_overlayEntry != null) {
+      _overlayKey.currentState?.closeWithAnimation();
+    } else {
+      final RenderBox renderBox = _buttonKey.currentContext!.findRenderObject() as RenderBox;
+      final Offset position = renderBox.localToGlobal(Offset.zero);
+      final Size size = renderBox.size;
+
+      _overlayEntry = OverlayEntry(
+        builder: (context) => _InsertFlyoutOverlay(
+          key: _overlayKey,
+          origin: position,
+          size: size,
+          dock: widget.dock,
+          controller: widget.controller,
+          onClose: () {
+            _overlayEntry?.remove();
+            setState(() {
+              _overlayEntry = null;
+            });
+          },
+        ),
+      );
+
+      Overlay.of(context).insert(_overlayEntry!);
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDoc = widget.controller.currentTool == DrawingTool.document;
+    bool isImage = widget.controller.currentTool == DrawingTool.image;
+    bool isActive = isDoc || isImage;
+
+    return _ToolButton(
+      key: _buttonKey,
+      icon: isActive ? (isImage ? Icons.image : Icons.article) : Icons.add_circle_outline,
+      label: isActive ? (isImage ? 'Image' : 'Document') : 'Insert',
+      isSelected: isActive,
+      onTap: () {
+        if (isActive) {
+          _toggleMenu();
+        } else {
+          _toggleMenu();
+        }
+      },
+    );
+  }
+}
+
+class _InsertFlyoutOverlay extends StatefulWidget {
+  final Offset origin;
+  final Size size;
+  final ToolbarDock dock;
+  final CanvasController controller;
+  final VoidCallback onClose;
+
+  const _InsertFlyoutOverlay({
+    required Key key,
+    required this.origin,
+    required this.size,
+    required this.dock,
+    required this.controller,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  State<_InsertFlyoutOverlay> createState() => _InsertFlyoutOverlayState();
+}
+
+class _InsertFlyoutOverlayState extends State<_InsertFlyoutOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+  late Animation<double> _expandAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _expandAnimation = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
+    _anim.forward();
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  void closeWithAnimation() {
+    if (_anim.isAnimating) return;
+    _anim.reverse().then((_) {
+      widget.onClose();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double? left, right, top, bottom;
+    bool isPanelHorizontal = false;
+
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    switch (widget.dock) {
+      case ToolbarDock.left:
+        left = widget.origin.dx + widget.size.width + 8;
+        top = widget.origin.dy + widget.size.height / 2;
+        isPanelHorizontal = true;
+        break;
+      case ToolbarDock.right:
+        right = (screenWidth - widget.origin.dx) + 8;
+        top = widget.origin.dy + widget.size.height / 2;
+        isPanelHorizontal = true;
+        break;
+      case ToolbarDock.top:
+        left = widget.origin.dx + widget.size.width / 2;
+        top = widget.origin.dy + widget.size.height + 8;
+        isPanelHorizontal = false;
+        break;
+      case ToolbarDock.bottom:
+        left = widget.origin.dx + widget.size.width / 2;
+        bottom = (screenHeight - widget.origin.dy) + 8;
+        isPanelHorizontal = false;
+        break;
+    }
+
+    return GestureDetector(
+      onTap: closeWithAnimation,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        children: [
+          Positioned(
+            left: left, right: right, top: top, bottom: bottom,
+            child: GestureDetector(
+              onTap: () {},
+              behavior: HitTestBehavior.opaque,
+              child: FractionalTranslation(
+                translation: widget.dock == ToolbarDock.top || widget.dock == ToolbarDock.bottom
+                    ? const Offset(-0.5, 0)
+                    : const Offset(0, -0.5),
+                child: ScaleTransition(
+                  scale: _expandAnimation,
+                alignment: widget.dock == ToolbarDock.left ? Alignment.centerLeft : (widget.dock == ToolbarDock.right ? Alignment.centerRight : (widget.dock == ToolbarDock.top ? Alignment.topCenter : Alignment.bottomCenter)),
+                child: Material(
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(24),
+                  color: HydropTheme.of(context).surface.withValues(alpha: 0.95),
+                  child: HydropTheme.of(context).applyBackdrop(
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: HydropTheme.of(context).divider, width: 1.5),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 3))],
+                      ),
+                      child: ListenableBuilder(
+                        listenable: widget.controller,
+                        builder: (context, _) {
+                          bool isDoc = widget.controller.currentTool == DrawingTool.document;
+                          bool isImage = widget.controller.currentTool == DrawingTool.image;
+                          return isPanelHorizontal
+                              ? Row(mainAxisSize: MainAxisSize.min, children: _buildPanelButtons(isDoc, isImage))
+                              : Column(mainAxisSize: MainAxisSize.min, children: _buildPanelButtons(isDoc, isImage));
+                        },
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPanelButtons(bool isDoc, bool isImage) {
+    return [
+      _ToolButton(
+        icon: Icons.article,
+        label: 'Document',
+        isSelected: isDoc,
+        onTap: () {
+          widget.controller.setTool(DrawingTool.document);
+          closeWithAnimation();
+        },
+      ),
+      _ToolButton(
+        icon: Icons.image,
+        label: 'Image',
+        isSelected: isImage,
+        onTap: () {
+          widget.controller.setTool(DrawingTool.image);
           closeWithAnimation();
         },
       ),

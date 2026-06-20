@@ -266,6 +266,10 @@ class CanvasController extends ChangeNotifier {
         }
         final layer = activeLayer;
         layer.strokes = [...layer.strokes, finishedStroke];
+        // Eagerly warm the path cache on the UI thread right after stroke completes.
+        // perfect_freehand's getStroke() is computed here instead of lazily inside
+        // paint() on the raster thread, eliminating jank spikes on the first frame.
+        finishedStroke.path;
         _forceLayersUpdate();
       }
     }
@@ -1478,7 +1482,7 @@ class CanvasController extends ChangeNotifier {
   // Logic Handlers (Moved from UI for Architecture strictness)
   // ---------------------------------------------------------------------------
   Future<void> pickImageAndPlace(Offset position) async {
-    final result = await FilePicker.pickFiles(type: FileType.image);
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
       saveSnapshot();
 

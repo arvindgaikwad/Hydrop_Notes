@@ -39,14 +39,18 @@ class CombinedCanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.saveLayer(null, Paint());
+    // Only open an offscreen layer when eraser strokes (BlendMode.clear) are present.
+    // saveLayer(null,...) allocates a full-screen GPU texture — skip it for normal strokes.
+    final bool needsLayer = strokes.any((s) => s.isPixelEraser) ||
+        (activeStrokeNotifier?.stroke?.isPixelEraser ?? false);
+    if (needsLayer) canvas.saveLayer(null, Paint());
     for (final stroke in strokes) {
       _drawStroke(canvas, stroke);
     }
     if (activeStrokeNotifier?.stroke != null) {
       _drawStroke(canvas, activeStrokeNotifier!.stroke!);
     }
-    canvas.restore();
+    if (needsLayer) canvas.restore();
   }
 
   @override
@@ -83,8 +87,13 @@ class SelectionDragPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.saveLayer(null, Paint());
-    
+    // Only open an offscreen layer when eraser strokes (BlendMode.clear) are present.
+    final bool needsLayer =
+        staticStrokes.any((s) => s.isPixelEraser) ||
+        dragStrokes.any((s) => s.isPixelEraser) ||
+        (activeStrokeNotifier?.stroke?.isPixelEraser ?? false);
+    if (needsLayer) canvas.saveLayer(null, Paint());
+
     // Draw non-selected strokes normally
     for (final stroke in staticStrokes) {
       _drawStroke(canvas, stroke);
@@ -116,8 +125,8 @@ class SelectionDragPainter extends CustomPainter {
     if (activeStrokeNotifier?.stroke != null) {
       _drawStroke(canvas, activeStrokeNotifier!.stroke!);
     }
-    
-    canvas.restore();
+
+    if (needsLayer) canvas.restore();
   }
 
   @override

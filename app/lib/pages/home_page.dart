@@ -146,14 +146,18 @@ class _HomePageState extends State<HomePage> {
                       ? CrossFadeState.showFirst
                       : CrossFadeState.showSecond,
                   // ── FULL SIDEBAR ──────────────────────────────────────────
-                  firstChild: OverflowBox(
-                    minWidth: 251,
-                    maxWidth: 251,
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: 251,
-                      height: constraints.maxHeight,
-                    child: Row(
+                  firstChild: SizedBox(
+                    height: constraints.maxHeight,
+                    child: OverflowBox(
+                      minWidth: 251,
+                      maxWidth: 251,
+                      minHeight: constraints.maxHeight,
+                      maxHeight: constraints.maxHeight,
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: 251,
+                        height: constraints.maxHeight,
+                        child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
@@ -444,15 +448,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   ),
+                  ),
                   // ── ICON RAIL (collapsed) ────────────────────────────────
-                  secondChild: OverflowBox(
-                    minWidth: 64,
-                    maxWidth: 64,
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: 64,
-                      height: constraints.maxHeight,
-                    child: ht.applyBackdrop(
+                  secondChild: SizedBox(
+                    height: constraints.maxHeight,
+                    child: OverflowBox(
+                      minWidth: 64,
+                      maxWidth: 64,
+                      minHeight: constraints.maxHeight,
+                      maxHeight: constraints.maxHeight,
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: 64,
+                        height: constraints.maxHeight,
+                        child: ht.applyBackdrop(
                       Material(
                         color: ht.sidebarBackground,
                         child: Column(
@@ -537,6 +546,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   ), // OverflowBox
+                  ),
                 ),
               ),
               ), // ClipRect

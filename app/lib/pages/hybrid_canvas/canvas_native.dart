@@ -419,7 +419,7 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                   maxScale: 10.0,
                   panEnabled: !widget.isDrawing,
                   scaleEnabled: !widget.isDrawing,
-                  boundaryMargin: const EdgeInsets.all(double.infinity),
+                  boundaryMargin: const EdgeInsets.all(1e9),
                   child: SizedBox(
                     width: 100000,
                     height: 100000,
@@ -471,7 +471,12 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                             widget.canvasController.layersNotifier,
                             widget.canvasController.selectionNotifier,
                             widget.canvasController.activeLayerIndexNotifier,
-                            widget.canvasController.selectionDragOffsetNotifier,
+                            // NOTE: selectionDragOffsetNotifier is intentionally excluded here.
+                            // It fires on every PointerMoveEvent during drag and would cause
+                            // the entire layer widget tree to rebuild at 60-120Hz.
+                            // It is consumed directly in RepaintBoundary > CustomPaint via
+                            // the `repaint` parameter of each painter, which only triggers
+                            // rasterization — not a widget rebuild.
                           ]),
                           builder: (context, _) {
                             final layers =
@@ -581,7 +586,10 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                                 layerWidgets.add(
                                   RepaintBoundary(
                                     child: CustomPaint(
-                                      size: const Size(100000, 100000),
+                                      size: Size.infinite,
+                                      isComplex: true,
+                                      willChange: isLayerActive &&
+                                          (activeTool == DrawingTool.connector),
                                       painter: ConnectorPainter(
                                         connectors: layer.connectorNodes,
                                         controller: widget.canvasController,
@@ -609,7 +617,11 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                                 layerWidgets.add(
                                   RepaintBoundary(
                                     child: CustomPaint(
-                                      size: const Size(100000, 100000),
+                                      size: Size.infinite,
+                                      isComplex: true,
+                                      willChange: isLayerActive &&
+                                          activeTool != DrawingTool.select &&
+                                          activeStroke != null,
                                       painter: hasSelectedStrokes
                                           ? SelectionDragPainter(
                                               staticStrokes: layer.strokes
@@ -633,7 +645,11 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                                                           DrawingTool.select)
                                                   ? widget.canvasController.activeStrokeNotifier
                                                   : null,
-                                              repaint: widget.canvasController.activeStrokeNotifier,
+                                              repaint: Listenable.merge([
+                                                widget.canvasController.activeStrokeNotifier,
+                                                // Rule 3: visual ghost during selection drag.
+                                                widget.canvasController.selectionDragOffsetNotifier,
+                                              ]),
                                             )
                                           : CombinedCanvasPainter(
                                               strokes: layer.strokes,

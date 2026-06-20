@@ -123,6 +123,8 @@ class WorkspaceController extends ChangeNotifier {
         createdAt: oldNote.createdAt,
         updatedAt: DateTime.now(),
       );
+      updatedNote.undoStack = List.from(oldNote.undoStack);
+      updatedNote.redoStack = List.from(oldNote.redoStack);
       _notes[index] = updatedNote;
       _noteBox.put(updatedNote.id, updatedNote);
       notifyListeners();
@@ -161,6 +163,8 @@ class WorkspaceController extends ChangeNotifier {
         createdAt: old.createdAt,
         updatedAt: DateTime.now(),
       );
+      updated.undoStack = List.from(old.undoStack);
+      updated.redoStack = List.from(old.redoStack);
       _notes[index] = updated;
       _noteBox.put(updated.id, updated);
       notifyListeners();
@@ -296,6 +300,8 @@ class WorkspaceController extends ChangeNotifier {
           createdAt: old.createdAt,
           updatedAt: DateTime.now(),
         );
+        updated.undoStack = List.from(old.undoStack);
+        updated.redoStack = List.from(old.redoStack);
         _notes[index] = updated;
         _noteBox.put(updated.id, updated);
       }
@@ -333,6 +339,8 @@ class WorkspaceController extends ChangeNotifier {
           createdAt: old.createdAt,
           updatedAt: DateTime.now(),
         );
+        updated.undoStack = List.from(old.undoStack);
+        updated.redoStack = List.from(old.redoStack);
         _notes[index] = updated;
         _noteBox.put(updated.id, updated);
       }

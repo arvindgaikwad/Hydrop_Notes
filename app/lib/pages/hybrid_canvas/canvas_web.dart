@@ -437,7 +437,7 @@ class _WebCanvasWidgetState extends State<_WebCanvasWidget> {
               maxScale: 10.0,
               panEnabled: !widget.isDrawing,
               scaleEnabled: !widget.isDrawing,
-              boundaryMargin: const EdgeInsets.all(double.infinity),
+              boundaryMargin: const EdgeInsets.all(1e9),
               child: SizedBox(
                 width: 100000,
                 height: 100000,
