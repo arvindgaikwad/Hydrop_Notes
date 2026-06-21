@@ -3,10 +3,39 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../models/workspace.dart';
 import '../controllers/workspace_controller.dart';
 import 'canvas_page.dart';
+import 'mobile_home_page.dart';
 import '../widgets/editable_cards.dart';
 
 import '../theme/hydrop_theme.dart';
 import '../theme/theme_controller.dart';
+
+void _showInstantMenu({
+  required BuildContext context,
+  required List<PopupMenuEntry<String>> items,
+  required Function(String) onSelected,
+}) async {
+  final RenderBox button = context.findRenderObject() as RenderBox;
+  final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+  final value = await showMenu<String>(
+    context: context,
+    position: position,
+    items: items,
+    popUpAnimationStyle: AnimationStyle(
+      curve: Curves.easeOutQuart,
+      duration: const Duration(milliseconds: 250),
+    ),
+  );
+  if (value != null) {
+    onSelected(value);
+  }
+}
 
 class HomePage extends StatefulWidget {
   final WorkspaceController workspace;
@@ -26,8 +55,20 @@ class _HomePageState extends State<HomePage> {
   bool _showTrash = false;
   bool _showSidebar = true;
   double _splitRatio = 0.5;
+  bool _isFirstBuild = true;
 
   String? _editingItemId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isFirstBuild) {
+      _isFirstBuild = false;
+      if (MediaQuery.of(context).size.width < 900) {
+        _showSidebar = false;
+      }
+    }
+  }
 
   void _createNewFolder(BuildContext context) async {
     final newFolder = await widget.workspace.createFolder('New Ocean');
@@ -72,7 +113,7 @@ class _HomePageState extends State<HomePage> {
           decoration: ht.appBackgroundDecoration,
           child: Scaffold(
             backgroundColor: Colors.transparent,
-          appBar: AppBar(
+          appBar: null, /* AppBar(
             leading: IconButton(
               icon: Icon(Icons.menu, color: ht.textPrimary),
               onPressed: () {
@@ -81,12 +122,76 @@ class _HomePageState extends State<HomePage> {
                 });
               },
             ),
-            title: Text(
-              'Hydrop',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: ht.textPrimary,
-              ),
+            title: Row(
+              children: [
+                Text(
+                  'Hydrop',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: ht.textPrimary,
+                  ),
+                ),
+                if (!_showTrash) ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    height: 20,
+                    width: 1.5,
+                    color: ht.divider,
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(Icons.home_outlined, size: 20, color: ht.textSecondary),
+                  const SizedBox(width: 8),
+                  Text('Root', style: TextStyle(color: ht.textSecondary, fontSize: 14)),
+                  ...widget.workspace.currentFolderPath.map((f) => Row(
+                        children: [
+                          const SizedBox(width: 4),
+                          Icon(Icons.chevron_right, size: 16, color: ht.divider),
+                          const SizedBox(width: 4),
+                          Text(f.name, style: TextStyle(color: ht.textSecondary, fontSize: 14)),
+                        ],
+                      )),
+                ],
+                if (_showTrash) ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    height: 20,
+                    width: 1.5,
+                    color: ht.divider,
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(Icons.delete_outline, size: 20, color: ht.error),
+                  const SizedBox(width: 8),
+                  Text('Trash', style: TextStyle(color: ht.error, fontSize: 14)),
+                ],
+                const Spacer(),
+                // Filter Bar
+                Container(
+                  width: 250,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: ht.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ht.divider),
+                  ),
+                  child: TextField(
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    },
+                    style: TextStyle(color: ht.textPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Filter...',
+                      hintStyle: TextStyle(color: ht.sidebarTextSecondary, fontSize: 14),
+                      prefixIcon: Icon(Icons.search, size: 18, color: ht.sidebarTextSecondary),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
             backgroundColor: ht.surface,
             flexibleSpace: ht.applyBackdrop(Container()),
@@ -126,9 +231,15 @@ class _HomePageState extends State<HomePage> {
             ],
             elevation: 0,
             scrolledUnderElevation: 1,
-          ),
+          ), */
           body: LayoutBuilder(
             builder: (context, constraints) {
+              if (constraints.maxWidth < 600) {
+                return MobileHomePage(
+                  workspace: widget.workspace,
+                  themeController: widget.themeController,
+                );
+              }
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -168,7 +279,28 @@ class _HomePageState extends State<HomePage> {
                                 width: 250,
                                 child: Column(
                                   children: [
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 16),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                      child: Row(
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.menu, color: ht.textPrimary),
+                                            onPressed: () => setState(() => _showSidebar = !_showSidebar),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Hydrop',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20,
+                                              color: ht.textPrimary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
                                     Padding(
                                       padding: const EdgeInsets.only(
                                         left: 16.0,
@@ -185,6 +317,17 @@ class _HomePageState extends State<HomePage> {
                                               fontWeight: FontWeight.bold,
                                               color: ht.sidebarTextSecondary,
                                             ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              widget.workspace.isMultiSelectMode ? Icons.checklist : Icons.checklist_rtl,
+                                              color: widget.workspace.isMultiSelectMode ? ht.primary : ht.sidebarTextSecondary,
+                                              size: 18,
+                                            ),
+                                            onPressed: () => widget.workspace.toggleMultiSelectMode(),
+                                            tooltip: widget.workspace.isMultiSelectMode ? 'Cancel Selection' : 'Select Multiple',
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
                                           ),
                                         ],
                                       ),
@@ -266,6 +409,39 @@ class _HomePageState extends State<HomePage> {
                                                       null,
                                                     );
                                                   },
+                                                  trailing: Builder(
+                                                    builder: (context) => InkResponse(
+                                                      radius: 16,
+                                                      onTapDown: (_) {
+                                                        _showInstantMenu(
+                                                          context: context,
+                                                          items: [
+                                                            const PopupMenuItem(
+                                                              value: 'add_folder',
+                                                              child: Text('Add Ocean'),
+                                                            ),
+                                                            const PopupMenuItem(
+                                                              value: 'add_note',
+                                                              child: Text('Add Drop'),
+                                                            ),
+                                                          ],
+                                                          onSelected: (value) {
+                                                            widget.workspace.setCurrentFolder(null);
+                                                            if (value == 'add_folder') {
+                                                              _createNewFolder(context);
+                                                            } else if (value == 'add_note') {
+                                                              _createAndOpenNote('infinite');
+                                                            }
+                                                          },
+                                                        );
+                                                      },
+                                                      onTap: () {},
+                                                      child: const Padding(
+                                                        padding: EdgeInsets.all(4.0),
+                                                        child: Icon(Icons.more_vert, size: 16),
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
                                               );
                                             },
@@ -295,6 +471,8 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   onAddFolder: () =>
                                                       _createNewFolder(context),
+                                                  onAddNote: () =>
+                                                      _createAndOpenNote('infinite'),
                                                 ),
                                               ),
                                           ...(widget.workspace.notes
@@ -353,88 +531,86 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       ),
                                     ),
-                                    const Divider(height: 1),
-                                    Container(
-                                      padding: const EdgeInsets.all(16.0),
-                                      color: ht.sidebarBackground,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Theme',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: ht.sidebarTextSecondary,
+                                    if (widget.workspace.isMultiSelectMode)
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: ht.surface,
+                                          border: Border(top: BorderSide(color: ht.divider)),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '${widget.workspace.selectedFolderIds.length + widget.workspace.selectedNoteIds.length} Selected',
+                                              style: TextStyle(fontSize: 12, color: ht.textSecondary),
                                             ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: SegmentedButton<bool>(
-                                              segments: const [
-                                                ButtonSegment(
-                                                  value: false,
-                                                  label: Text(
-                                                    'Ink',
-                                                    style: TextStyle(fontSize: 12),
-                                                  ),
-                                                  icon: Icon(Icons.edit, size: 16),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(Icons.delete, size: 18),
+                                                  color: ht.error,
+                                                  tooltip: 'Delete Selected',
+                                                  onPressed: widget.workspace.bulkMoveToTrash,
                                                 ),
-                                                ButtonSegment(
-                                                  value: true,
-                                                  label: Text(
-                                                    'Glass',
-                                                    style: TextStyle(fontSize: 12),
-                                                  ),
-                                                  icon: Icon(
-                                                    Icons.water_drop,
-                                                    size: 16,
-                                                  ),
+                                                IconButton(
+                                                  icon: const Icon(Icons.drive_file_move, size: 18),
+                                                  color: ht.primary,
+                                                  tooltip: 'Move Selected to Root',
+                                                  onPressed: () => widget.workspace.bulkMove(null),
                                                 ),
                                               ],
-                                              selected: {
-                                                widget.themeController.isGlass,
-                                              },
-                                              onSelectionChanged:
-                                                  (Set<bool> newSelection) {
-                                                    if (newSelection.first !=
-                                                        widget
-                                                            .themeController
-                                                            .isGlass) {
-                                                      widget.themeController.toggle();
-                                                    }
-                                                  },
-                                              style: ButtonStyle(
-                                                visualDensity: VisualDensity.compact,
-                                                backgroundColor:
-                                                    WidgetStateProperty.resolveWith<
-                                                      Color
-                                                    >((states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return ht.primary.withValues(
-                                                          alpha: 0.15,
-                                                        );
-                                                      }
-                                                      return Colors.transparent;
-                                                    }),
-                                                foregroundColor:
-                                                    WidgetStateProperty.resolveWith<
-                                                      Color
-                                                    >((states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return ht.primary;
-                                                      }
-                                                      return ht.sidebarText;
-                                                    }),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    const Divider(height: 1),
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Select Theme',
+                                      color: ht.surface,
+                                      offset: const Offset(250, -50),
+                                      onSelected: (val) {
+                                        if (val == 'ink') widget.themeController.setInk();
+                                        if (val == 'glass') widget.themeController.setGlass();
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'ink',
+                                          child: Text('Ink Theme', style: TextStyle(color: ht.textPrimary)),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'glass',
+                                          child: Text('Glass Theme', style: TextStyle(color: ht.textPrimary)),
+                                        ),
+                                      ],
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                                        color: ht.sidebarBackground,
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.palette_outlined, color: ht.sidebarTextSecondary, size: 20),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Theme',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: ht.sidebarText,
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                            const Spacer(),
+                                            Text(
+                                              widget.themeController.isGlass ? 'Glass' : 'Ink',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: ht.sidebarTextSecondary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(Icons.unfold_more, color: ht.sidebarTextSecondary, size: 16),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -466,6 +642,11 @@ class _HomePageState extends State<HomePage> {
                         color: ht.sidebarBackground,
                         child: Column(
                           children: [
+                            const SizedBox(height: 16),
+                            IconButton(
+                              icon: Icon(Icons.menu, color: ht.textPrimary),
+                              onPressed: () => setState(() => _showSidebar = !_showSidebar),
+                            ),
                             const SizedBox(height: 16),
                             // Home
                             Tooltip(
@@ -524,18 +705,29 @@ class _HomePageState extends State<HomePage> {
                                 },
                               ),
                             ),
-                            // Theme toggle
-                            Tooltip(
-                              message: widget.themeController.isGlass ? 'Switch to Ink' : 'Switch to Glass',
-                              child: IconButton(
-                                icon: Icon(
-                                  widget.themeController.isGlass
-                                      ? Icons.water_drop
-                                      : Icons.edit_outlined,
-                                  color: ht.sidebarTextSecondary,
-                                  size: 20,
+                            // Theme menu
+                            PopupMenuButton<String>(
+                              tooltip: 'Select Theme',
+                              color: ht.surface,
+                              offset: const Offset(64, -50),
+                              onSelected: (val) {
+                                if (val == 'ink') widget.themeController.setInk();
+                                if (val == 'glass') widget.themeController.setGlass();
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'ink',
+                                  child: Text('Ink Theme', style: TextStyle(color: ht.textPrimary)),
                                 ),
-                                onPressed: () => widget.themeController.toggle(),
+                                PopupMenuItem(
+                                  value: 'glass',
+                                  child: Text('Glass Theme', style: TextStyle(color: ht.textPrimary)),
+                                ),
+                              ],
+                              icon: Icon(
+                                Icons.palette_outlined,
+                                color: ht.sidebarTextSecondary,
+                                size: 20,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -811,6 +1003,36 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (widget.themeController.isInk)
+                    Builder(
+                      builder: (context) => InkResponse(
+                        radius: 16,
+                        onTapDown: (_) {
+                          _showInstantMenu(
+                            context: context,
+                            items: const [
+                              PopupMenuItem(value: 'Kalam', child: Text('Kalam (Default)')),
+                              PopupMenuItem(value: 'Caveat', child: Text('Caveat')),
+                              PopupMenuItem(value: 'Patrick Hand', child: Text('Patrick Hand')),
+                              PopupMenuItem(value: 'Indie Flower', child: Text('Indie Flower')),
+                              PopupMenuItem(value: 'Shadows Into Light', child: Text('Shadows Into Light')),
+                              PopupMenuItem(value: 'Gochi Hand', child: Text('Gochi Hand')),
+                            ],
+                            onSelected: (val) => widget.themeController.setInkFont(val),
+                          );
+                        },
+                        onTap: () {},
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Icon(
+                            Icons.font_download_outlined,
+                            color: ht.textSecondary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (widget.themeController.isInk) const SizedBox(width: 8),
                   if (isPrimary && !isSplit)
                     Tooltip(
                       message: 'Split View',
@@ -875,12 +1097,22 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
   ) {
     final ht = HydropTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+          decoration: BoxDecoration(
+            color: ht.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -912,8 +1144,10 @@ class _HomePageState extends State<HomePage> {
                 ),
             ],
           ),
-          const SizedBox(height: 32),
-          Expanded(
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 32.0, right: 32.0, top: 32.0),
             child: displayedFolders.isEmpty && displayedNotes.isEmpty
                 ? Center(
                     child: Text(
@@ -924,6 +1158,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   )
                 : CustomScrollView(
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                     slivers: [
                       if (displayedFolders.isNotEmpty) ...[
                         SliverToBoxAdapter(
@@ -942,10 +1177,10 @@ class _HomePageState extends State<HomePage> {
                         SliverGrid(
                           gridDelegate:
                               const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 250,
+                                maxCrossAxisExtent: 400,
                                 crossAxisSpacing: 24,
                                 mainAxisSpacing: 24,
-                                childAspectRatio: 2.5,
+                                childAspectRatio: 3.5,
                               ),
                           delegate: SliverChildBuilderDelegate((
                             context,
@@ -1058,8 +1293,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ),
-                        SliverMasonryGrid.count(
-                          crossAxisCount: 3,
+                        SliverMasonryGrid.extent(
+                          maxCrossAxisExtent: 250,
                           mainAxisSpacing: 24,
                           crossAxisSpacing: 24,
                           childCount: displayedNotes.length,
@@ -1137,10 +1372,10 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ],
                   ),
+            ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 
@@ -1152,6 +1387,7 @@ class _FolderTreeItem extends StatefulWidget {
   final VoidCallback onClearEditing;
   final VoidCallback? onFolderSelected;
   final VoidCallback? onAddFolder;
+  final VoidCallback? onAddNote;
 
   const _FolderTreeItem({
     required this.folder,
@@ -1161,6 +1397,7 @@ class _FolderTreeItem extends StatefulWidget {
     required this.onClearEditing,
     this.onFolderSelected,
     this.onAddFolder,
+    this.onAddNote,
   });
 
   @override
@@ -1232,40 +1469,57 @@ class _FolderTreeItemState extends State<_FolderTreeItem> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, size: 16),
-          padding: EdgeInsets.zero,
-          tooltip: 'Options',
-          onSelected: (value) {
-            if (value == 'add_folder') {
-              widget.workspace.setCurrentFolder(widget.folder.id);
-              widget.onAddFolder?.call();
-            } else if (value == 'rename') {
-              _startEditing();
-            } else if (value == 'delete') {
-              widget.workspace.moveToTrash(widget.folder.id, true);
-              if (widget.workspace.currentFolderId == widget.folder.id) {
-                widget.workspace.setCurrentFolder(null);
-              }
-            } else if (value == 'move') {
-              widget.workspace.startMove(widget.folder.id, 'folder');
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'add_folder',
-              child: Text('Add Sub-Ocean'),
+        Builder(
+          builder: (context) => InkResponse(
+            radius: 16,
+            onTapDown: (_) {
+              _showInstantMenu(
+                context: context,
+                items: [
+                  const PopupMenuItem(
+                    value: 'add_folder',
+                    child: Text('Add Sub-Ocean'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'add_note',
+                    child: Text('Add Drop'),
+                  ),
+                  const PopupMenuItem(value: 'rename', child: Text('Rename')),
+                  const PopupMenuItem(value: 'move', child: Text('Move')),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(color: HydropTheme.of(context).error),
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'add_folder') {
+                    widget.workspace.setCurrentFolder(widget.folder.id);
+                    widget.onAddFolder?.call();
+                  } else if (value == 'add_note') {
+                    widget.workspace.setCurrentFolder(widget.folder.id);
+                    widget.onAddNote?.call();
+                  } else if (value == 'rename') {
+                    _startEditing();
+                  } else if (value == 'delete') {
+                    widget.workspace.moveToTrash(widget.folder.id, true);
+                    if (widget.workspace.currentFolderId == widget.folder.id) {
+                      widget.workspace.setCurrentFolder(null);
+                    }
+                  } else if (value == 'move') {
+                    widget.workspace.startMove(widget.folder.id, 'folder');
+                  }
+                },
+              );
+            },
+            onTap: () {},
+            child: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.more_vert, size: 16),
             ),
-            const PopupMenuItem(value: 'rename', child: Text('Rename')),
-            const PopupMenuItem(value: 'move', child: Text('Move')),
-            PopupMenuItem(
-              value: 'delete',
-              child: Text(
-                'Delete',
-                style: TextStyle(color: HydropTheme.of(context).error),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -1323,17 +1577,22 @@ class _FolderTreeItemState extends State<_FolderTreeItem> {
       color: isSelected
           ? ht.sidebarSelected.withValues(alpha: 0.12)
           : Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          widget.onFolderSelected?.call();
-          widget.workspace.setCurrentFolder(widget.folder.id);
-        },
-        onDoubleTap: () {
-          if (widget.workspace.primaryNoteId != null) {
-            widget.workspace.closeNote(widget.workspace.primaryNoteId!);
-          }
-        },
-        child: Padding(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) {
+            if (widget.workspace.isMultiSelectMode) {
+              widget.workspace.toggleFolderSelection(widget.folder.id);
+            } else {
+              widget.onFolderSelected?.call();
+              widget.workspace.setCurrentFolder(widget.folder.id);
+              if (widget.workspace.primaryNoteId != null) {
+                widget.workspace.closeNote(widget.workspace.primaryNoteId!);
+              }
+            }
+          },
+          child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
           child: Row(
             children: [
@@ -1367,9 +1626,18 @@ class _FolderTreeItemState extends State<_FolderTreeItem> {
               ),
               const SizedBox(width: 8),
               Expanded(child: titleWidget),
-              if (showActions) _buildTrailingActions(),
+              if (showActions)
+                widget.workspace.isMultiSelectMode
+                    ? Checkbox(
+                        value: widget.workspace.selectedFolderIds.contains(widget.folder.id),
+                        onChanged: (val) => widget.workspace.toggleFolderSelection(widget.folder.id),
+                        visualDensity: VisualDensity.compact,
+                        activeColor: ht.primary,
+                      )
+                    : _buildTrailingActions(),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -1397,6 +1665,7 @@ class _FolderTreeItemState extends State<_FolderTreeItem> {
                       onClearEditing: widget.onClearEditing,
                       onFolderSelected: widget.onFolderSelected,
                       onAddFolder: widget.onAddFolder,
+                      onAddNote: widget.onAddNote,
                     ),
                   ),
                   ...childNotes.map(
@@ -1556,36 +1825,46 @@ class _NoteTreeItemState extends State<_NoteTreeItem> {
   }
 
   Widget _buildTrailingActions() {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, size: 16),
-      padding: EdgeInsets.zero,
-      tooltip: 'Options',
-      onSelected: (value) {
-        if (value == 'split_view') {
-          widget.workspace.openNote(widget.note.id, asSecondary: true);
-        } else if (value == 'rename') {
-          _startEditing();
-        } else if (value == 'move') {
-          widget.workspace.startMove(widget.note.id, 'note');
-        } else if (value == 'delete') {
-          widget.workspace.moveToTrash(widget.note.id, false);
-        }
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'split_view',
-          child: Text('Open in Split View'),
+    return Builder(
+      builder: (context) => InkResponse(
+        radius: 16,
+        onTapDown: (_) {
+          _showInstantMenu(
+            context: context,
+            items: [
+              const PopupMenuItem(
+                value: 'split_view',
+                child: Text('Open in Split View'),
+              ),
+              const PopupMenuItem(value: 'rename', child: Text('Rename')),
+              const PopupMenuItem(value: 'move', child: Text('Move')),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(
+                  'Delete',
+                  style: TextStyle(color: HydropTheme.of(context).error),
+                ),
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'split_view') {
+                widget.workspace.openNote(widget.note.id, asSecondary: true);
+              } else if (value == 'rename') {
+                _startEditing();
+              } else if (value == 'move') {
+                widget.workspace.startMove(widget.note.id, 'note');
+              } else if (value == 'delete') {
+                widget.workspace.moveToTrash(widget.note.id, false);
+              }
+            },
+          );
+        },
+        onTap: () {},
+        child: const Padding(
+          padding: EdgeInsets.all(4.0),
+          child: Icon(Icons.more_vert, size: 16),
         ),
-        const PopupMenuItem(value: 'rename', child: Text('Rename')),
-        const PopupMenuItem(value: 'move', child: Text('Move')),
-        PopupMenuItem(
-          value: 'delete',
-          child: Text(
-            'Delete',
-            style: TextStyle(color: HydropTheme.of(context).error),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -1627,27 +1906,42 @@ class _NoteTreeItemState extends State<_NoteTreeItem> {
       color: isSelected
           ? ht.sidebarSelected.withValues(alpha: 0.12)
           : Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          widget.workspace.openNote(widget.note.id);
-        },
-        onDoubleTap: _startEditing,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-          child: Row(
-            children: [
-              SizedBox(width: widget.depth * 16.0),
-              const SizedBox(width: 24, height: 24), // Chevron placeholder
-              const SizedBox(width: 4),
-              Icon(
-                Icons.description_outlined,
-                color: isSelected ? ht.sidebarSelected : ht.sidebarTextSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: titleWidget),
-              _buildTrailingActions(),
-            ],
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) {
+            if (widget.workspace.isMultiSelectMode) {
+              widget.workspace.toggleNoteSelection(widget.note.id);
+            } else {
+              widget.workspace.openNote(widget.note.id);
+            }
+          },
+          onDoubleTap: _startEditing,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+            child: Row(
+              children: [
+                SizedBox(width: widget.depth * 16.0),
+                const SizedBox(width: 24, height: 24), // Chevron placeholder
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.description_outlined,
+                  color: isSelected ? ht.sidebarSelected : ht.sidebarTextSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: titleWidget),
+                widget.workspace.isMultiSelectMode
+                    ? Checkbox(
+                        value: widget.workspace.selectedNoteIds.contains(widget.note.id),
+                        onChanged: (val) => widget.workspace.toggleNoteSelection(widget.note.id),
+                        visualDensity: VisualDensity.compact,
+                        activeColor: ht.primary,
+                      )
+                    : _buildTrailingActions(),
+              ],
+            ),
           ),
         ),
       ),

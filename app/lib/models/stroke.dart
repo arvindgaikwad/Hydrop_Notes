@@ -115,10 +115,21 @@ class Stroke {
           _cachedPath!.moveTo(outlinePoints.first.dx, outlinePoints.first.dy);
           _cachedOutlinePolygon!.add(Offset(outlinePoints.first.dx, outlinePoints.first.dy));
           
-          for (int i = 1; i < outlinePoints.length; i++) {
-            final pt = Offset(outlinePoints[i].dx, outlinePoints[i].dy);
+          if (outlinePoints.length == 2) {
+            final pt = Offset(outlinePoints[1].dx, outlinePoints[1].dy);
             _cachedPath!.lineTo(pt.dx, pt.dy);
             _cachedOutlinePolygon!.add(pt);
+          } else if (outlinePoints.length > 2) {
+            for (int i = 1; i < outlinePoints.length - 1; i++) {
+              final p0 = Offset(outlinePoints[i].dx, outlinePoints[i].dy);
+              final p1 = Offset(outlinePoints[i + 1].dx, outlinePoints[i + 1].dy);
+              final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+              _cachedPath!.quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
+              _cachedOutlinePolygon!.add(mid);
+            }
+            final last = Offset(outlinePoints.last.dx, outlinePoints.last.dy);
+            _cachedPath!.lineTo(last.dx, last.dy);
+            _cachedOutlinePolygon!.add(last);
           }
           _cachedPath!.close();
         }

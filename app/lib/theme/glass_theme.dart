@@ -160,18 +160,22 @@ class GlassTheme extends HydropTheme {
   Widget applyBackdrop(Widget child, {BorderRadius? borderRadius}) {
     // BackdropFilter is extremely heavy and causes rendering glitches
     // when nested inside AnimatedCrossFade/AnimatedContainer on Windows.
-    // Instead of a true blur, we apply a translucent overlay to simulate glass,
-    // which keeps the app buttery smooth and visible.
+    // Instead of a true blur, we apply a translucent overlay to simulate glass.
+    final hasRadius = borderRadius != null && borderRadius != BorderRadius.zero;
+    
     return Container(
       decoration: BoxDecoration(
         color: const Color(0x33FFFFFF), // 20% white overlay to simulate glass
         borderRadius: borderRadius ?? BorderRadius.zero,
         border: Border.fromBorderSide(borderThin),
       ),
-      child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.zero,
-        child: child,
-      ),
+      // Only apply expensive ClipRRect if we actually have rounded corners
+      child: hasRadius
+          ? ClipRRect(
+              borderRadius: borderRadius,
+              child: child,
+            )
+          : child,
     );
   }
 }

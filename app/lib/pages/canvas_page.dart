@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../controllers/workspace_controller.dart';
 import '../controllers/canvas_controller.dart';
 import '../controllers/export_controller.dart';
@@ -798,7 +800,7 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                                   elevation: 0,
                                 ),
                                 onPressed: () async {
-                                  final format = _canvasController.pendingExportFormatNotifier.value;
+                                  final formats = _canvasController.pendingExportFormatNotifier.value;
                                   final rect = _canvasController.exportFrameNotifier.value;
                                   
                                   setState(() {
@@ -806,40 +808,44 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
                                     _canvasController.exportFrameNotifier.value = null;
                                   });
 
+                                  if (formats == null || formats.isEmpty) return;
+
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Exporting to $format...')),
+                                    SnackBar(content: Text('Exporting ${formats.map((f) => f.toUpperCase()).join(', ')}...')),
                                   );
 
-                                  if (format == 'png') {
-                                    await ExportController.exportToImage(
-                                      context, 
-                                      _canvasController.layersNotifier.value, 
-                                      cropRect: rect, 
-                                      fileName: _canvasController.pendingExportNameNotifier.value,
-                                      includeGrid: _canvasController.pendingExportIncludeGrid,
-                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                    );
-                                  } else if (format == 'svg') {
-                                    await ExportController.exportToSvg(
-                                      context, 
-                                      _canvasController.layersNotifier.value, 
-                                      cropRect: rect, 
-                                      fileName: _canvasController.pendingExportNameNotifier.value,
-                                      includeGrid: _canvasController.pendingExportIncludeGrid,
-                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                    );
-                                  } else {
-                                    await ExportController.exportToPdf(
-                                      _canvasController.layersNotifier.value, 
-                                      canvasType: widget.note.canvasType, 
-                                      cropRect: rect, 
-                                      fileName: _canvasController.pendingExportNameNotifier.value,
-                                      includeGrid: _canvasController.pendingExportIncludeGrid,
-                                      transparentBackground: _canvasController.pendingExportTransparentBackground,
-                                      backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                                    );
+                                  for (final format in formats) {
+                                    if (format == 'png') {
+                                      await ExportController.exportToImage(
+                                        context, 
+                                        _canvasController.layersNotifier.value, 
+                                        cropRect: rect, 
+                                        fileName: _canvasController.pendingExportNameNotifier.value,
+                                        includeGrid: _canvasController.pendingExportIncludeGrid,
+                                        transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                        backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                      );
+                                    } else if (format == 'svg') {
+                                      await ExportController.exportToSvg(
+                                        context, 
+                                        _canvasController.layersNotifier.value, 
+                                        cropRect: rect, 
+                                        fileName: _canvasController.pendingExportNameNotifier.value,
+                                        includeGrid: _canvasController.pendingExportIncludeGrid,
+                                        transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                        backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                      );
+                                    } else {
+                                      await ExportController.exportToPdf(
+                                        _canvasController.layersNotifier.value, 
+                                        canvasType: widget.note.canvasType, 
+                                        cropRect: rect, 
+                                        fileName: _canvasController.pendingExportNameNotifier.value,
+                                        includeGrid: _canvasController.pendingExportIncludeGrid,
+                                        transparentBackground: _canvasController.pendingExportTransparentBackground,
+                                        backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                      );
+                                    }
                                   }
 
                                   if (context.mounted) {
@@ -869,7 +875,7 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        String selectedFormat = 'png';
+        Set<String> selectedFormats = {'png'};
         String selectedRegion = 'full';
         String fileName = 'horizon_export';
         bool includeGrid = false;
@@ -877,191 +883,370 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: HydropTheme.of(context).surface,
-              title: Text('Export Canvas', style: TextStyle(color: HydropTheme.of(context).textPrimary)),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('File Name', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'horizon_export',
-                        filled: true,
-                        fillColor: HydropTheme.of(context).surfaceVariant,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
+            final ht = HydropTheme.of(context);
+            
+            Widget buildOptionCard({
+              required String label, 
+              required IconData icon, 
+              required bool isSelected, 
+              required VoidCallback onTap
+            }) {
+              return Expanded(
+                child: GestureDetector(
+                  onTap: onTap,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: isSelected ? ht.primary.withValues(alpha: 0.15) : ht.surfaceVariant,
+                      borderRadius: BorderRadius.circular(ht.radiusMd),
+                      border: Border.all(
+                        color: isSelected ? ht.primary : Colors.transparent,
+                        width: 1.5,
                       ),
-                      onChanged: (val) {
-                        fileName = val.trim().isEmpty ? 'horizon_export' : val.trim();
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    Text('Format', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ChoiceChip(
-                          label: const Text('PNG Image'),
-                          selected: selectedFormat == 'png',
-                          onSelected: (val) => setStateDialog(() => selectedFormat = 'png'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                        ),
-                        ChoiceChip(
-                          label: const Text('PDF Document'),
-                          selected: selectedFormat == 'pdf',
-                          onSelected: (val) => setStateDialog(() => selectedFormat = 'pdf'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                        ),
-                        ChoiceChip(
-                          label: const Text('SVG Vector'),
-                          selected: selectedFormat == 'svg',
-                          onSelected: (val) => setStateDialog(() => selectedFormat = 'svg'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        Icon(icon, color: isSelected ? ht.primary : ht.iconDefault, size: 28),
+                        const SizedBox(height: 12),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSelected ? ht.primary : ht.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Text('Region', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                  ),
+                ),
+              );
+            }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              insetPadding: const EdgeInsets.all(24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(ht.radiusXl),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    width: 460,
+                    decoration: BoxDecoration(
+                      color: ht.surface,
+                      borderRadius: BorderRadius.circular(ht.radiusXl),
+                      border: Border.all(color: ht.divider),
+                      boxShadow: ht.shadowLarge,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ChoiceChip(
-                          label: const Text('Full Canvas (Auto)'),
-                          selected: selectedRegion == 'full',
-                          onSelected: (val) => setStateDialog(() => selectedRegion = 'full'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: ht.primary.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.ios_share_rounded, color: ht.primary, size: 22),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                'Export Canvas',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: ht.textPrimary,
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: Icon(Icons.close_rounded, color: ht.textSecondary),
+                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                splashRadius: 24,
+                              ),
+                            ],
+                          ),
                         ),
-                        ChoiceChip(
-                          label: const Text('A4 Frame'),
-                          selected: selectedRegion == 'a4',
-                          onSelected: (val) => setStateDialog(() => selectedRegion = 'a4'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        Container(height: 1, color: ht.divider),
+                        
+                        // Body
+                        Flexible(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(28),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('File Name', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: ht.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  style: TextStyle(fontFamily: 'Inter', color: ht.textPrimary, fontSize: 15),
+                                  decoration: InputDecoration(
+                                    hintText: 'horizon_export',
+                                    hintStyle: TextStyle(fontFamily: 'Inter', color: ht.textDisabled),
+                                    filled: true,
+                                    fillColor: ht.surfaceVariant,
+                                    prefixIcon: Icon(Icons.description_outlined, color: ht.iconDefault, size: 22),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(ht.radiusMd),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                  ),
+                                  onChanged: (val) {
+                                    fileName = val.trim().isEmpty ? 'horizon_export' : val.trim();
+                                  },
+                                ),
+                                const SizedBox(height: 28),
+                                
+                                Text('Format', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: ht.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    buildOptionCard(
+                                      label: 'PNG Image', 
+                                      icon: Icons.image_outlined, 
+                                      isSelected: selectedFormats.contains('png'), 
+                                      onTap: () => setStateDialog(() {
+                                        if (selectedFormats.contains('png') && selectedFormats.length > 1) {
+                                          selectedFormats.remove('png');
+                                        } else {
+                                          selectedFormats.add('png');
+                                        }
+                                      })
+                                    ),
+                                    const SizedBox(width: 12),
+                                    buildOptionCard(
+                                      label: 'PDF Doc', 
+                                      icon: Icons.picture_as_pdf_outlined, 
+                                      isSelected: selectedFormats.contains('pdf'), 
+                                      onTap: () => setStateDialog(() {
+                                        if (selectedFormats.contains('pdf') && selectedFormats.length > 1) {
+                                          selectedFormats.remove('pdf');
+                                        } else {
+                                          selectedFormats.add('pdf');
+                                        }
+                                      })
+                                    ),
+                                    const SizedBox(width: 12),
+                                    buildOptionCard(
+                                      label: 'SVG Vector', 
+                                      icon: Icons.polyline_outlined, 
+                                      isSelected: selectedFormats.contains('svg'), 
+                                      onTap: () => setStateDialog(() {
+                                        if (selectedFormats.contains('svg') && selectedFormats.length > 1) {
+                                          selectedFormats.remove('svg');
+                                        } else {
+                                          selectedFormats.add('svg');
+                                        }
+                                      })
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 28),
+                                
+                                Text('Export Region', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: ht.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                const SizedBox(height: 10),
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        buildOptionCard(
+                                          label: 'Full Canvas', 
+                                          icon: Icons.fullscreen_rounded, 
+                                          isSelected: selectedRegion == 'full', 
+                                          onTap: () => setStateDialog(() => selectedRegion = 'full')
+                                        ),
+                                        const SizedBox(width: 12),
+                                        buildOptionCard(
+                                          label: 'A4 Page', 
+                                          icon: Icons.crop_portrait_rounded, 
+                                          isSelected: selectedRegion == 'a4', 
+                                          onTap: () => setStateDialog(() => selectedRegion = 'a4')
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        buildOptionCard(
+                                          label: 'Long Scroll', 
+                                          icon: Icons.view_day_outlined, 
+                                          isSelected: selectedRegion == 'long', 
+                                          onTap: () => setStateDialog(() => selectedRegion = 'long')
+                                        ),
+                                        const SizedBox(width: 12),
+                                        buildOptionCard(
+                                          label: 'Custom Region', 
+                                          icon: Icons.crop_free_rounded, 
+                                          isSelected: selectedRegion == 'custom', 
+                                          onTap: () => setStateDialog(() => selectedRegion = 'custom')
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 28),
+                                
+                                Text('Appearance', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: ht.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                const SizedBox(height: 12),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: ht.surfaceVariant,
+                                    borderRadius: BorderRadius.circular(ht.radiusMd),
+                                    border: Border.all(color: ht.divider.withValues(alpha: 0.5)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      SwitchListTile(
+                                        title: Text('Include Grid Background', style: TextStyle(fontFamily: 'Inter', fontSize: 15, color: ht.textPrimary, fontWeight: FontWeight.w500)),
+                                        value: includeGrid,
+                                        activeColor: ht.primary,
+                                        activeTrackColor: ht.primary.withValues(alpha: 0.3),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                                        onChanged: (val) => setStateDialog(() => includeGrid = val),
+                                      ),
+                                      Container(height: 1, color: ht.divider.withValues(alpha: 0.5), margin: const EdgeInsets.symmetric(horizontal: 20)),
+                                      SwitchListTile(
+                                        title: Text('Transparent Canvas', style: TextStyle(fontFamily: 'Inter', fontSize: 15, color: ht.textPrimary, fontWeight: FontWeight.w500)),
+                                        value: transparentBackground,
+                                        activeColor: ht.primary,
+                                        activeTrackColor: ht.primary.withValues(alpha: 0.3),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                                        onChanged: (val) => setStateDialog(() => transparentBackground = val),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        ChoiceChip(
-                          label: const Text('Long Form'),
-                          selected: selectedRegion == 'long',
-                          onSelected: (val) => setStateDialog(() => selectedRegion = 'long'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
-                        ),
-                        ChoiceChip(
-                          label: const Text('Custom Region'),
-                          selected: selectedRegion == 'custom',
-                          onSelected: (val) => setStateDialog(() => selectedRegion = 'custom'),
-                          selectedColor: HydropTheme.of(context).primary.withValues(alpha: 0.2),
+                        
+                        Container(height: 1, color: ht.divider),
+                        
+                        // Footer Actions
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ht.radiusSm)),
+                                ),
+                                child: Text('Cancel', style: TextStyle(fontFamily: 'Inter', fontSize: 15, color: ht.textSecondary, fontWeight: FontWeight.w600)),
+                              ),
+                              const SizedBox(width: 16),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  Navigator.of(dialogContext).pop();
+                                  
+                                  if (selectedRegion == 'full') {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Exporting ${selectedFormats.map((f) => f.toUpperCase()).join(', ')}...', style: const TextStyle(fontFamily: 'Inter'))),
+                                    );
+                                    
+                                    for (final format in selectedFormats) {
+                                      if (format == 'png') {
+                                        await ExportController.exportToImage(
+                                          context, 
+                                          _canvasController.layersNotifier.value, 
+                                          fileName: fileName,
+                                          includeGrid: includeGrid,
+                                          transparentBackground: transparentBackground,
+                                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                        );
+                                      } else if (format == 'svg') {
+                                        await ExportController.exportToSvg(
+                                          context, 
+                                          _canvasController.layersNotifier.value, 
+                                          fileName: fileName,
+                                          includeGrid: includeGrid,
+                                          transparentBackground: transparentBackground,
+                                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                        );
+                                      } else {
+                                        await ExportController.exportToPdf(
+                                          _canvasController.layersNotifier.value, 
+                                          canvasType: widget.note.canvasType, 
+                                          fileName: fileName,
+                                          includeGrid: includeGrid,
+                                          transparentBackground: transparentBackground,
+                                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
+                                        );
+                                      }
+                                    }
+                                    
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Export Complete!', style: TextStyle(fontFamily: 'Inter'))),
+                                      );
+                                    }
+                                  } else {
+                                    _canvasController.pendingExportFormatNotifier.value = selectedFormats.toList();
+                                    _canvasController.pendingExportNameNotifier.value = fileName;
+                                    _canvasController.pendingExportIncludeGrid = includeGrid;
+                                    _canvasController.pendingExportTransparentBackground = transparentBackground;
+                                    
+                                    final center = _transformationController.toScene(
+                                      Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2)
+                                    );
+                                    
+                                    double width = 800;
+                                    double height = 600;
+                                    if (selectedRegion == 'a4') {
+                                      width = 800;
+                                      height = 1131; 
+                                    } else if (selectedRegion == 'long') {
+                                      width = 800;
+                                      height = 2400; 
+                                    }
+                                    
+                                    final initialRect = Rect.fromCenter(center: center, width: width, height: height);
+                                    
+                                    setState(() {
+                                      _canvasController.setTool(DrawingTool.exportFrame);
+                                      _canvasController.exportFrameNotifier.value = initialRect;
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: ht.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ht.radiusSm)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.download_rounded, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Export', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 15)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Text('Background Settings', style: TextStyle(color: HydropTheme.of(context).textSecondary, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
-                      title: const Text('Include Grid/Pattern'),
-                      value: includeGrid,
-                      activeColor: HydropTheme.of(context).primary,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (val) => setStateDialog(() => includeGrid = val),
-                    ),
-                    SwitchListTile(
-                      title: const Text('Transparent Background'),
-                      value: transparentBackground,
-                      activeColor: HydropTheme.of(context).primary,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (val) => setStateDialog(() => transparentBackground = val),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text('Cancel', style: TextStyle(color: HydropTheme.of(context).textSecondary)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: HydropTheme.of(context).primary),
-                  onPressed: () async {
-                    Navigator.of(dialogContext).pop();
-                    
-                    if (selectedRegion == 'full') {
-                      // Immediate Export
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Exporting to $selectedFormat...')),
-                      );
-                      if (selectedFormat == 'png') {
-                        await ExportController.exportToImage(
-                          context, 
-                          _canvasController.layersNotifier.value, 
-                          fileName: fileName,
-                          includeGrid: includeGrid,
-                          transparentBackground: transparentBackground,
-                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                        );
-                      } else if (selectedFormat == 'svg') {
-                        await ExportController.exportToSvg(
-                          context, 
-                          _canvasController.layersNotifier.value, 
-                          fileName: fileName,
-                          includeGrid: includeGrid,
-                          transparentBackground: transparentBackground,
-                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                        );
-                      } else {
-                        await ExportController.exportToPdf(
-                          _canvasController.layersNotifier.value, 
-                          canvasType: widget.note.canvasType, 
-                          fileName: fileName,
-                          includeGrid: includeGrid,
-                          transparentBackground: transparentBackground,
-                          backgroundVariant: _canvasController.backgroundVariantNotifier.value,
-                        );
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Export Complete!')),
-                        );
-                      }
-                    } else {
-                      // Enter Export Frame Mode
-                      _canvasController.pendingExportFormatNotifier.value = selectedFormat;
-                      _canvasController.pendingExportNameNotifier.value = fileName;
-                      _canvasController.pendingExportIncludeGrid = includeGrid;
-                      _canvasController.pendingExportTransparentBackground = transparentBackground;
-                      
-                      // Calculate initial rect size in viewport center
-                      final center = _transformationController.toScene(
-                        Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2)
-                      );
-                      
-                      double width = 800;
-                      double height = 600;
-                      if (selectedRegion == 'a4') {
-                        width = 800;
-                        height = 1131; // 1:1.414 aspect
-                      } else if (selectedRegion == 'long') {
-                        width = 800;
-                        height = 2400; // long scroll
-                      }
-                      
-                      final initialRect = Rect.fromCenter(center: center, width: width, height: height);
-                      
-                      setState(() {
-                        _canvasController.setTool(DrawingTool.exportFrame);
-                        _canvasController.exportFrameNotifier.value = initialRect;
-                      });
-                    }
-                  },
-                  child: const Text('Continue', style: TextStyle(color: Colors.white)),
-                ),
-              ],
             );
           },
         );
@@ -1077,26 +1262,38 @@ class _CanvasPageState extends State<CanvasPage> with SingleTickerProviderStateM
         _canvasController.setTool(tool);
         Navigator.pop(context);
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        width: 64,
-        height: 64,
+        width: 68,
+        height: 68,
         decoration: BoxDecoration(
-          color: isSelected ? ht.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected ? ht.primary.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(ht.radiusLg),
-          border: Border.all(color: isSelected ? ht.primary : Colors.transparent),
+          border: Border.all(color: isSelected ? ht.primary.withValues(alpha: 0.5) : Colors.transparent),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: isSelected ? ht.iconActive : ht.iconDefault, size: 28),
-            const SizedBox(height: 4),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                icon, 
+                key: ValueKey<bool>(isSelected),
+                color: isSelected ? ht.primary : ht.iconDefault, 
+                size: isSelected ? 28 : 24
+              ),
+            ),
+            const SizedBox(height: 6),
             Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
+              label.toUpperCase(),
+              style: GoogleFonts.getFont(
+                ht.fontFamily,
+                fontSize: 9,
+                letterSpacing: 1.2,
                 color: isSelected ? ht.textPrimary : ht.textSecondary,
-                fontWeight: isSelected ? ht.fontBold : ht.fontMedium,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],

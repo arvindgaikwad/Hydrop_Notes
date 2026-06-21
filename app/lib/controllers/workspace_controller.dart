@@ -18,6 +18,19 @@ class WorkspaceController extends ChangeNotifier {
   String? _currentFolderId;
   String? get currentFolderId => _currentFolderId;
 
+  List<Folder> get currentFolderPath {
+    final path = <Folder>[];
+    String? currentId = _currentFolderId;
+    while (currentId != null) {
+      final idx = _folders.indexWhere((f) => f.id == currentId);
+      if (idx == -1) break;
+      final folder = _folders[idx];
+      path.insert(0, folder);
+      currentId = folder.parentId;
+    }
+    return path;
+  }
+
   String? _primaryNoteId;
   String? get primaryNoteId => _primaryNoteId;
 
@@ -357,5 +370,98 @@ class WorkspaceController extends ChangeNotifier {
       _noteBox.delete(id);
     }
     notifyListeners();
+  }
+
+  // --- Multiselect State ---
+  bool _isMultiSelectMode = false;
+  bool get isMultiSelectMode => _isMultiSelectMode;
+
+  final Set<String> _selectedFolderIds = {};
+  final Set<String> _selectedNoteIds = {};
+
+  Set<String> get selectedFolderIds => _selectedFolderIds;
+  Set<String> get selectedNoteIds => _selectedNoteIds;
+
+  void toggleMultiSelectMode() {
+    _isMultiSelectMode = !_isMultiSelectMode;
+    if (!_isMultiSelectMode) {
+      _selectedFolderIds.clear();
+      _selectedNoteIds.clear();
+    }
+    notifyListeners();
+  }
+
+  void toggleFolderSelection(String id) {
+    if (_selectedFolderIds.contains(id)) {
+      _selectedFolderIds.remove(id);
+    } else {
+      _selectedFolderIds.add(id);
+    }
+    notifyListeners();
+  }
+
+  void toggleNoteSelection(String id) {
+    if (_selectedNoteIds.contains(id)) {
+      _selectedNoteIds.remove(id);
+    } else {
+      _selectedNoteIds.add(id);
+    }
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedFolderIds.clear();
+    _selectedNoteIds.clear();
+    notifyListeners();
+  }
+
+  void bulkMoveToTrash() {
+    // Copy the sets to lists so we aren't modifying while iterating
+    for (final id in _selectedFolderIds.toList()) {
+      moveToTrash(id, true);
+    }
+    for (final id in _selectedNoteIds.toList()) {
+      moveToTrash(id, false);
+    }
+    toggleMultiSelectMode(); // Will clear selection and exit mode
+  }
+
+  void bulkPermanentlyDelete() {
+    for (final id in _selectedFolderIds.toList()) {
+      permanentlyDelete(id, true);
+    }
+    for (final id in _selectedNoteIds.toList()) {
+      permanentlyDelete(id, false);
+    }
+    toggleMultiSelectMode();
+  }
+
+  void bulkRestoreFromTrash() {
+    for (final id in _selectedFolderIds.toList()) {
+      restoreFromTrash(id, true);
+    }
+    for (final id in _selectedNoteIds.toList()) {
+      restoreFromTrash(id, false);
+    }
+    toggleMultiSelectMode();
+  }
+
+  void startBulkMove() {
+    // Just indicate we are moving something to show the drag target UI logic if needed
+    // However, bulk drag and drop might be complex, so we will use a "Move" button
+    // which opens a folder picker dialogue. For now, we'll just track if we are moving.
+  }
+
+  void bulkMove(String? targetFolderId) {
+    for (final id in _selectedFolderIds.toList()) {
+      // Prevent moving a folder into itself
+      if (id != targetFolderId) {
+        moveFolder(id, targetFolderId);
+      }
+    }
+    for (final id in _selectedNoteIds.toList()) {
+      moveNote(id, targetFolderId);
+    }
+    toggleMultiSelectMode();
   }
 }

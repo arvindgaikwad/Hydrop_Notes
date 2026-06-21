@@ -100,7 +100,7 @@ class CanvasController extends ChangeNotifier {
 
   // Export State
   final ValueNotifier<Rect?> exportFrameNotifier = ValueNotifier(null);
-  final ValueNotifier<String?> pendingExportFormatNotifier = ValueNotifier(null);
+  final ValueNotifier<List<String>?> pendingExportFormatNotifier = ValueNotifier(null);
   final ValueNotifier<String> pendingExportNameNotifier = ValueNotifier('horizon_export');
   bool pendingExportIncludeGrid = false;
   bool pendingExportTransparentBackground = false;

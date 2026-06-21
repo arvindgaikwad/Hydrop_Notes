@@ -12,15 +12,38 @@ class ThumbnailPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.translate(-boundingBox.left, -boundingBox.top);
+
+    final bool needsLayer = strokes.any((s) => s.isPixelEraser);
+    if (needsLayer) {
+      // Create an offscreen buffer so BlendMode.clear erases strokes, not the background.
+      canvas.saveLayer(boundingBox, Paint());
+    }
+
     for (final stroke in strokes) {
       if (stroke.points.isEmpty) continue;
       final paint = Paint()
         ..color = stroke.color
-        ..style = PaintingStyle.fill;
+        ..style = (!stroke.isInkPen && !stroke.isPixelEraser) ? PaintingStyle.stroke : PaintingStyle.fill
+        ..strokeWidth = stroke.baseWidth
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+
       if (stroke.isPixelEraser) {
         paint.blendMode = BlendMode.clear;
+        paint.style = PaintingStyle.stroke;
+        paint.strokeWidth = stroke.baseWidth;
+      } else if (stroke.isTape) {
+        if (stroke.isTapeRevealed) {
+          paint.color = stroke.color.withValues(alpha: 0.2);
+        } else {
+          paint.color = stroke.color.withValues(alpha: 0.95);
+        }
       }
       canvas.drawPath(stroke.path, paint);
+    }
+
+    if (needsLayer) {
+      canvas.restore();
     }
   }
 
@@ -59,6 +82,7 @@ class EditableFolderCard extends StatefulWidget {
 class _EditableFolderCardState extends State<EditableFolderCard> {
   DateTime? _lastTapTime;
   bool _isEditing = false;
+  bool _isHovered = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
 
@@ -87,30 +111,49 @@ class _EditableFolderCardState extends State<EditableFolderCard> {
   @override
   Widget build(BuildContext context) {
     final ht = HydropTheme.of(context);
-    return InkWell(
-      onTap: _isEditing
-          ? null
-          : () {
-              final now = DateTime.now();
-              widget.onTap();
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: _isHovered ? Matrix4.translationValues(0, -2, 0) : Matrix4.identity(),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: _isEditing
+                ? null
+            : (_) {
+                final now = DateTime.now();
+                widget.onTap();
 
-              if (widget.onDoubleTap != null) {
-                if (_lastTapTime != null &&
-                    now.difference(_lastTapTime!) <
-                        const Duration(milliseconds: 300)) {
-                  widget.onDoubleTap!();
-                  _lastTapTime = null;
-                } else {
-                  _lastTapTime = now;
+                if (widget.onDoubleTap != null) {
+                  if (_lastTapTime != null &&
+                      now.difference(_lastTapTime!) <
+                          const Duration(milliseconds: 300)) {
+                    widget.onDoubleTap!();
+                    _lastTapTime = null;
+                  } else {
+                    _lastTapTime = now;
+                  }
                 }
-              }
-            },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
+              },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: ht.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ht.divider),
+          border: Border.all(
+            color: _isHovered ? ht.primary.withValues(alpha: 0.5) : ht.divider,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: _isHovered ? 0.08 : 0.03),
+              blurRadius: _isHovered ? 16 : 10,
+              offset: Offset(0, _isHovered ? 8 : 4),
+            ),
+          ],
         ),
         padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16, right: 8),
         child: Row(
@@ -194,6 +237,9 @@ class _EditableFolderCardState extends State<EditableFolderCard> {
           ],
         ),
       ),
+      ),
+      ),
+      ),
     );
   }
 }
@@ -224,6 +270,7 @@ class EditableNoteCard extends StatefulWidget {
 
 class _EditableNoteCardState extends State<EditableNoteCard> {
   bool _isEditing = false;
+  bool _isHovered = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
 
@@ -283,22 +330,34 @@ class _EditableNoteCardState extends State<EditableNoteCard> {
         .expand((l) => l.strokes)
         .toList();
 
-    return InkWell(
-      onTap: _isEditing ? null : widget.onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: ht.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ht.divider),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: _isHovered ? Matrix4.translationValues(0, -4, 0) : Matrix4.identity(),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: _isEditing ? null : (_) => widget.onTap(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: ht.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _isHovered ? ht.primary.withValues(alpha: 0.5) : ht.divider,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _isHovered ? 0.08 : 0.03),
+                  blurRadius: _isHovered ? 16 : 10,
+                  offset: Offset(0, _isHovered ? 8 : 4),
+                ),
+              ],
             ),
-          ],
-        ),
         clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -435,6 +494,9 @@ class _EditableNoteCardState extends State<EditableNoteCard> {
             ),
           ],
         ),
+      ),
+      ),
+      ),
       ),
     );
   }

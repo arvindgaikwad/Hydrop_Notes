@@ -103,8 +103,11 @@ class ExportController {
             : PdfPageFormat(bounds.width, bounds.height));
 
     final pdfImages = <String, pw.MemoryImage>{};
+    final rasterizedStrokes = <String, pw.MemoryImage>{};
+
     for (final layer in layers) {
       if (!layer.isVisible) continue;
+      
       for (final node in layer.imageNodes) {
         if (node.filePath.isNotEmpty && !pdfImages.containsKey(node.id)) {
           try {
@@ -114,6 +117,52 @@ class ExportController {
             }
           } catch (e) {
             debugPrint("Failed to load PDF image: $e");
+          }
+        }
+      }
+
+      final hasEraser = layer.strokes.any((s) => s.isPixelEraser);
+      if (hasEraser) {
+        final boundsW = cropRect?.width ?? bounds.width;
+        final boundsH = cropRect?.height ?? bounds.height;
+        if (boundsW > 0 && boundsH > 0) {
+          final recorder = ui.PictureRecorder();
+          final canvas = Canvas(recorder);
+          
+          final scale = 3.0;
+          canvas.scale(scale, scale);
+          
+          final offsetDx = cropRect != null ? -cropRect.left : -bounds.left;
+          final offsetDy = cropRect != null ? -cropRect.top : -bounds.top;
+          canvas.translate(offsetDx, offsetDy);
+
+          canvas.saveLayer(null, Paint());
+          for (var stroke in layer.strokes) {
+            if (stroke.points.isEmpty) continue;
+
+            final paint = Paint()
+              ..color = stroke.color
+              ..style = (!stroke.isInkPen && !stroke.isPixelEraser) ? PaintingStyle.stroke : PaintingStyle.fill
+              ..strokeWidth = stroke.baseWidth
+              ..strokeCap = StrokeCap.round
+              ..strokeJoin = StrokeJoin.round;
+
+            if (stroke.isPixelEraser) {
+              paint.blendMode = BlendMode.clear;
+              paint.style = PaintingStyle.stroke;
+              paint.strokeWidth = stroke.baseWidth;
+            } else if (stroke.isTape) {
+              paint.color = stroke.color.withValues(alpha: stroke.isTapeRevealed ? 0.2 : 0.95);
+            }
+            canvas.drawPath(stroke.path, paint);
+          }
+          canvas.restore();
+          
+          final picture = recorder.endRecording();
+          final img = await picture.toImage((boundsW * scale).toInt(), (boundsH * scale).toInt());
+          final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+          if (byteData != null) {
+            rasterizedStrokes[layer.id] = pw.MemoryImage(byteData.buffer.asUint8List());
           }
         }
       }
@@ -148,6 +197,7 @@ class ExportController {
 
           for (final layer in layers) {
             if (!layer.isVisible) continue;
+            
             for (final node in layer.imageNodes) {
               if (pdfImages.containsKey(node.id)) {
                  children.add(
@@ -171,20 +221,34 @@ class ExportController {
                  );
               }
             }
-          }
 
-          children.add(
-            pw.Positioned(
-              left: 0,
-              top: 0,
-              child: pw.CustomPaint(
-                size: paintSize,
-                painter: (PdfGraphics canvas, PdfPoint size) {
-                  _paintPdfCanvas(canvas, size, layers, offset: offset);
-                },
-              )
-            )
-          );
+            if (rasterizedStrokes.containsKey(layer.id)) {
+                children.add(
+                  pw.Positioned(
+                    left: 0,
+                    top: 0,
+                    child: pw.Container(
+                      width: paintSize.x,
+                      height: paintSize.y,
+                      child: pw.Image(rasterizedStrokes[layer.id]!, fit: pw.BoxFit.fill),
+                    )
+                  )
+                );
+            } else {
+                children.add(
+                  pw.Positioned(
+                    left: 0,
+                    top: 0,
+                    child: pw.CustomPaint(
+                      size: paintSize,
+                      painter: (PdfGraphics canvas, PdfPoint size) {
+                        _paintPdfCanvas(canvas, size, [layer], offset: offset);
+                      },
+                    )
+                  )
+                );
+            }
+          }
 
           return pw.FullPage(
             ignoreMargins: true,
@@ -361,8 +425,44 @@ class ExportController {
       }
 
       // Strokes (Pens, Highlights)
+      final hasEraser = layer.strokes.any((s) => s.isPixelEraser);
+      
+      if (hasEraser) {
+        sb.writeln('  <defs>');
+        sb.writeln('    <mask id="eraser_mask_${layer.id}">');
+        sb.writeln('      <rect width="100%" height="100%" fill="white" />');
+        
+        for (final stroke in layer.strokes) {
+          if (!stroke.isPixelEraser) continue;
+          if (stroke.points.length < 2) continue;
+          
+          final pathPoints = stroke.points;
+          sb.write('      <path d="');
+          sb.write('M ${pathPoints.first.point.dx} ${pathPoints.first.point.dy} ');
+          if (pathPoints.length == 2) {
+            sb.write('L ${pathPoints[1].point.dx} ${pathPoints[1].point.dy} ');
+          } else {
+            for (int i = 1; i < pathPoints.length - 1; i++) {
+              final p0 = pathPoints[i].point;
+              final p1 = pathPoints[i + 1].point;
+              final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+              sb.write('Q ${p0.dx} ${p0.dy} ${mid.dx} ${mid.dy} ');
+            }
+            sb.write('L ${pathPoints.last.point.dx} ${pathPoints.last.point.dy} ');
+          }
+          sb.write('" fill="none" stroke="black" stroke-width="${stroke.baseWidth}" stroke-linecap="round" stroke-linejoin="round" />\n');
+        }
+        
+        sb.writeln('    </mask>');
+        sb.writeln('  </defs>');
+        sb.writeln('  <g mask="url(#eraser_mask_${layer.id})">');
+      } else {
+        sb.writeln('  <g>');
+      }
+
       for (final stroke in layer.strokes) {
-        if (stroke.points.isEmpty || stroke.isPixelEraser || stroke.color == Colors.transparent) continue;
+        if (stroke.points.isEmpty) continue;
+        if (stroke.isPixelEraser) continue;
 
         final color = stroke.color;
         final hexColor = '#${(color.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(color.b * 255).toInt().toRadixString(16).padLeft(2, '0')}';
@@ -372,7 +472,7 @@ class ExportController {
           final outline = stroke.outlinePolygon;
           if (outline.isEmpty) continue;
 
-          sb.write('<path d="');
+          sb.write('    <path d="');
           sb.write('M ${outline.first.dx} ${outline.first.dy} ');
           for (int i = 1; i < outline.length; i++) {
             sb.write('L ${outline[i].dx} ${outline[i].dy} ');
@@ -382,7 +482,7 @@ class ExportController {
           final pathPoints = stroke.points;
           if (pathPoints.length < 2) continue;
 
-          sb.write('<path d="');
+          sb.write('    <path d="');
           sb.write('M ${pathPoints.first.point.dx} ${pathPoints.first.point.dy} ');
           if (pathPoints.length == 2) {
             sb.write('L ${pathPoints[1].point.dx} ${pathPoints[1].point.dy} ');
@@ -398,6 +498,8 @@ class ExportController {
           sb.write('" fill="none" stroke="$hexColor" stroke-width="${stroke.baseWidth}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="$opacity" />\n');
         }
       }
+      
+      sb.writeln('  </g>');
     }
 
     sb.writeln('</g>');
@@ -451,8 +553,6 @@ class ExportController {
     for (final layer in layers) {
       if (!layer.isVisible) continue;
 
-      canvas.saveLayer(null, Paint());
-
       for (final imageNode in layer.imageNodes) {
         if (imageNode.filePath.isEmpty) continue;
         try {
@@ -483,17 +583,28 @@ class ExportController {
         }
       }
 
+      canvas.saveLayer(null, Paint());
+
       for (final stroke in layer.strokes) {
         if (stroke.points.isEmpty) continue;
 
         final paint = Paint()
           ..color = stroke.color
-          ..style = PaintingStyle.fill;
+          ..style = (!stroke.isInkPen && !stroke.isPixelEraser) ? PaintingStyle.stroke : PaintingStyle.fill
+          ..strokeWidth = stroke.baseWidth
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
 
         if (stroke.isPixelEraser) {
           paint.blendMode = BlendMode.clear;
+          paint.style = PaintingStyle.stroke;
+          paint.strokeWidth = stroke.baseWidth;
         } else if (stroke.isTape) {
-          paint.color = stroke.color.withValues(alpha: stroke.isTapeRevealed ? 0.2 : 0.95);
+          if (stroke.isTapeRevealed) {
+            paint.color = stroke.color.withValues(alpha: 0.2);
+          } else {
+            paint.color = stroke.color.withValues(alpha: 0.95);
+          }
         }
 
         canvas.drawPath(stroke.path, paint);
@@ -528,21 +639,23 @@ void _paintPdfCanvas(
       if (stroke.points.isEmpty) continue;
 
       canvas.saveContext();
-      if (stroke.isPixelEraser || stroke.color == Colors.transparent) {
+      if (!stroke.isPixelEraser && stroke.color == Colors.transparent) {
         canvas.restoreContext();
         continue;
       }
 
-      final color = PdfColor(
-        stroke.color.r,
-        stroke.color.g,
-        stroke.color.b,
-        stroke.color.a,
-      );
+      final color = stroke.isPixelEraser 
+          ? PdfColors.white 
+          : PdfColor(
+              stroke.color.r,
+              stroke.color.g,
+              stroke.color.b,
+              stroke.color.a,
+            );
 
       canvas.setFillColor(color);
 
-      if (stroke.isInkPen) {
+      if (stroke.isInkPen && !stroke.isPixelEraser) {
         final outline = stroke.outlinePolygon;
         if (outline.isNotEmpty) {
           final start = outline.first;

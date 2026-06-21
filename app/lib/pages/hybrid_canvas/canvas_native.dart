@@ -43,6 +43,7 @@ class _NativeCanvasWidget extends HybridCanvasWidget {
 
 class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
   Offset? _middleMouseStart;
+  final Set<int> _activePointerIds = {};
 
   // Export Frame State
   bool _isDraggingExportFrame = false;
@@ -52,6 +53,13 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
   Rect? _exportFrameStartRect;
 
   void _onPointerDown(PointerDownEvent event) {
+    _activePointerIds.add(event.pointer);
+    if (_activePointerIds.length > 1) {
+       widget.canvasController.endStroke();
+       setState(() {}); // Enable InteractiveViewer panning
+       return;
+    }
+
     if (event.buttons == 4 || event.buttons == kMiddleMouseButton) {
       _middleMouseStart = event.position;
       return;
@@ -194,6 +202,8 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
   }
 
   void _onPointerMove(PointerMoveEvent event) {
+    if (_activePointerIds.length > 1) return; // Let InteractiveViewer handle it
+
     if (_middleMouseStart != null) {
       final delta = event.position - _middleMouseStart!;
       _middleMouseStart = event.position;
@@ -258,6 +268,11 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
   }
 
   void _onPointerUp(PointerEvent event) {
+    _activePointerIds.remove(event.pointer);
+    if (_activePointerIds.isEmpty) {
+      setState(() {}); // Disable InteractiveViewer panning
+    }
+
     if (_middleMouseStart != null) {
       _middleMouseStart = null;
       return;
@@ -417,8 +432,8 @@ class _NativeCanvasWidgetState extends State<_NativeCanvasWidget> {
                   clipBehavior: Clip.none,
                   minScale: 0.1,
                   maxScale: 10.0,
-                  panEnabled: !widget.isDrawing,
-                  scaleEnabled: !widget.isDrawing,
+                  panEnabled: !widget.isDrawing || _activePointerIds.length > 1,
+                  scaleEnabled: !widget.isDrawing || _activePointerIds.length > 1,
                   boundaryMargin: const EdgeInsets.all(1e9),
                   child: SizedBox(
                     width: 100000,

@@ -189,216 +189,255 @@ class _TextNodeWidgetState extends State<TextNodeWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_isEditing)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: ht.surface,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                        Transform.translate(
+                          offset: const Offset(0, -60), // Float above the text
+                          child: ht.applyBackdrop(
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.format_bold, size: 20),
-                                color: widget.node.isBold
-                                    ? ht.primary
-                                    : Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.isBold = !widget.node.isBold;
-                                  });
-                                  widget.onStyleChanged();
-                                },
+                              decoration: BoxDecoration(
+                                color: ht.surface,
+                                borderRadius: BorderRadius.circular(ht.radiusXl),
+                                border: Border.fromBorderSide(ht.borderThin),
+                                boxShadow: ht.shadowSmall,
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.format_italic, size: 20),
-                                color: widget.node.isItalic
-                                    ? ht.primary
-                                    : Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.isItalic =
-                                        !widget.node.isItalic;
-                                  });
-                                  widget.onStyleChanged();
-                                },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.format_bold, size: 20),
+                                    color: widget.node.isBold
+                                        ? ht.primary
+                                        : ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.isBold = !widget.node.isBold;
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.format_italic, size: 20),
+                                    color: widget.node.isItalic
+                                        ? ht.primary
+                                        : ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.isItalic =
+                                            !widget.node.isItalic;
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.format_underlined,
+                                      size: 20,
+                                    ),
+                                    color: widget.node.isUnderline
+                                        ? ht.primary
+                                        : ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.isUnderline =
+                                            !widget.node.isUnderline;
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                                    color: ht.divider,
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      widget.node.alignmentIndex == 0
+                                          ? Icons.format_align_left
+                                          : widget.node.alignmentIndex == 1
+                                          ? Icons.format_align_center
+                                          : Icons.format_align_right,
+                                      size: 20,
+                                    ),
+                                    color: ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.alignmentIndex =
+                                            (widget.node.alignmentIndex + 1) % 3;
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                                    color: ht.divider,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.remove, size: 20),
+                                    color: ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.fontSize =
+                                            (widget.node.fontSize - 2).clamp(
+                                              12.0,
+                                              72.0,
+                                            );
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                  Text(
+                                    widget.node.fontSize.toInt().toString(),
+                                    style: GoogleFonts.getFont(
+                                      ht.fontFamily,
+                                      fontSize: 14,
+                                      color: ht.textPrimary,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add, size: 20),
+                                    color: ht.iconDefault,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        widget.node.fontSize =
+                                            (widget.node.fontSize + 2).clamp(
+                                              12.0,
+                                              72.0,
+                                            );
+                                      });
+                                      widget.onStyleChanged();
+                                    },
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.format_underlined,
-                                  size: 20,
-                                ),
-                                color: widget.node.isUnderline
-                                    ? ht.primary
-                                    : Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.isUnderline =
-                                        !widget.node.isUnderline;
-                                  });
-                                  widget.onStyleChanged();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: Icon(
-                                  widget.node.alignmentIndex == 0
-                                      ? Icons.format_align_left
-                                      : widget.node.alignmentIndex == 1
-                                      ? Icons.format_align_center
-                                      : Icons.format_align_right,
-                                  size: 20,
-                                ),
-                                color: Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.alignmentIndex =
-                                        (widget.node.alignmentIndex + 1) % 3;
-                                  });
-                                  widget.onStyleChanged();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.remove, size: 20),
-                                color: Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.fontSize =
-                                        (widget.node.fontSize - 2).clamp(
-                                          12.0,
-                                          72.0,
-                                        );
-                                  });
-                                  widget.onStyleChanged();
-                                },
-                              ),
-                              Text(
-                                widget.node.fontSize.toInt().toString(),
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add, size: 20),
-                                color: Colors.black54,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    widget.node.fontSize =
-                                        (widget.node.fontSize + 2).clamp(
-                                          12.0,
-                                          72.0,
-                                        );
-                                  });
-                                  widget.onStyleChanged();
-                                },
-                              ),
-                            ],
+                            ),
+                            borderRadius: BorderRadius.circular(ht.radiusXl),
                           ),
                         ),
                       _isEditing
-                          ? SizedBox(
-                              width: widget.node.width,
-                              child: TextField(
-                                controller: _controller,
-                                focusNode: _focusNode,
-                                textAlign: widget.node.alignmentIndex == 0
-                                    ? TextAlign.left
-                                    : widget.node.alignmentIndex == 1
-                                    ? TextAlign.center
-                                    : TextAlign.right,
-                                style: GoogleFonts.deliciousHandrawn(
-                                  fontSize: widget.node.fontSize,
-                                  color: widget.node.color,
-                                  fontWeight: widget.node.isBold
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontStyle: widget.node.isItalic
-                                      ? FontStyle.italic
-                                      : FontStyle.normal,
-                                  decoration: widget.node.isUnderline
-                                      ? TextDecoration.underline
-                                      : TextDecoration.none,
-                                  height: 1.2,
+                          ? IntrinsicWidth(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: 100, // Minimum width so it's not squished
+                                  maxWidth: MediaQuery.sizeOf(context).width * 0.8, // Prevent overflow
                                 ),
-                                maxLines: null,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
+                                child: TextField(
+                                  controller: _controller,
+                                  focusNode: _focusNode,
+                                  textAlign: widget.node.alignmentIndex == 0
+                                      ? TextAlign.left
+                                      : widget.node.alignmentIndex == 1
+                                      ? TextAlign.center
+                                      : TextAlign.right,
+                                  style: GoogleFonts.getFont(
+                                    ht.fontFamily,
+                                    fontSize: widget.node.fontSize,
+                                    color: widget.node.color,
+                                    fontWeight: widget.node.isBold
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontStyle: widget.node.isItalic
+                                        ? FontStyle.italic
+                                        : FontStyle.normal,
+                                    decoration: widget.node.isUnderline
+                                        ? TextDecoration.underline
+                                        : TextDecoration.none,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: null,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    hintText: 'Type something...',
+                                    hintStyle: GoogleFonts.getFont(
+                                      ht.fontFamily,
+                                      color: ht.textDisabled,
+                                      fontSize: widget.node.fontSize,
+                                    ),
+                                  ),
+                                  onChanged: (val) {
+                                    // Let intrinsic width handle resizing naturally
+                                  },
+                                  onSubmitted: (_) => _finishEditing(),
                                 ),
-                                onSubmitted: (_) => _finishEditing(),
                               ),
                             )
-                          : SizedBox(
-                              width: widget.node.width,
-                              child: Text(
-                                widget.node.text.isEmpty
-                                    ? "Double tap to edit"
-                                    : widget.node.text,
-                                textAlign: widget.node.alignmentIndex == 0
-                                    ? TextAlign.left
-                                    : widget.node.alignmentIndex == 1
-                                    ? TextAlign.center
-                                    : TextAlign.right,
-                                style: GoogleFonts.deliciousHandrawn(
-                                  fontSize: widget.node.fontSize,
-                                  color: widget.node.color,
-                                  fontWeight: widget.node.isBold
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontStyle: widget.node.isItalic
-                                      ? FontStyle.italic
-                                      : FontStyle.normal,
-                                  decoration: widget.node.isUnderline
-                                      ? TextDecoration.underline
-                                      : TextDecoration.none,
-                                  height: 1.2,
+                          : IntrinsicWidth(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: 100,
+                                  maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  child: Text(
+                                    widget.node.text.isEmpty
+                                        ? "Double tap to edit"
+                                        : widget.node.text,
+                                    textAlign: widget.node.alignmentIndex == 0
+                                        ? TextAlign.left
+                                        : widget.node.alignmentIndex == 1
+                                        ? TextAlign.center
+                                        : TextAlign.right,
+                                    style: GoogleFonts.getFont(
+                                      ht.fontFamily,
+                                      fontSize: widget.node.fontSize,
+                                      color: widget.node.color,
+                                      fontWeight: widget.node.isBold
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      fontStyle: widget.node.isItalic
+                                          ? FontStyle.italic
+                                          : FontStyle.normal,
+                                      decoration: widget.node.isUnderline
+                                          ? TextDecoration.underline
+                                          : TextDecoration.none,
+                                      height: 1.2,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),

@@ -15,9 +15,21 @@ class DrawingToolbar extends StatefulWidget {
 enum ToolbarDock { left, right, top, bottom }
 
 class _DrawingToolbarState extends State<DrawingToolbar> {
-  ToolbarDock _dock = ToolbarDock.left;
+  ToolbarDock _dock = ToolbarDock.top;
   final GlobalKey _colorButtonKey = GlobalKey();
   bool _isMinimized = false;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      if (MediaQuery.of(context).size.width < 600) {
+        _dock = ToolbarDock.bottom;
+      }
+      _initialized = true;
+    }
+  }
 
   bool get _isVertical =>
       _dock == ToolbarDock.left || _dock == ToolbarDock.right;
